@@ -105,9 +105,20 @@ const KeyboardTrainer = () => {
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Column: Keyboard Visualization */}
-          <div className="xl:col-span-2">
+        {/* Main Training Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left: Typing + Keyboard */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Typing Area */}
+            <TypingArea
+              text={session.practiceText}
+              layout={COLEMAK_LAYOUT}
+              onStatsUpdate={updateStats}
+              onKeyPress={handleKeyPress}
+              onComplete={handleLessonComplete}
+            />
+            
+            {/* Keyboard Visualization - Right below typing area */}
             <KeyboardVisualization
               layout={COLEMAK_LAYOUT}
               keyStates={session.keyStates}
@@ -115,7 +126,7 @@ const KeyboardTrainer = () => {
             />
           </div>
 
-          {/* Right Column: Progress */}
+          {/* Right: Progress Stats */}
           <div>
             <ProgressTracker
               stats={session.stats}
@@ -124,17 +135,6 @@ const KeyboardTrainer = () => {
               lessonProgress={currentLessonProgress?.masteryLevel || 0}
             />
           </div>
-        </div>
-
-        {/* Typing Area */}
-        <div className="mt-6">
-          <TypingArea
-            text={session.practiceText}
-            layout={COLEMAK_LAYOUT}
-            onStatsUpdate={updateStats}
-            onKeyPress={handleKeyPress}
-            onComplete={handleLessonComplete}
-          />
         </div>
 
         {/* Lesson Selection */}

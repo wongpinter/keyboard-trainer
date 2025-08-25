@@ -83,8 +83,9 @@ export default {
 				}
 			},
 			fontFamily: {
-				typing: 'var(--typing-font)',
-				sans: ['Inter', 'system-ui', 'sans-serif']
+				sans: ['Inter', 'Geist', 'system-ui', 'sans-serif'],
+				mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+				typing: ['JetBrains Mono', 'ui-monospace', 'monospace']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

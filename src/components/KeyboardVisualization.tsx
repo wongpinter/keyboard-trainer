@@ -23,7 +23,7 @@ const FINGER_COLORS = [
 const KeyboardVisualization = ({ 
   layout, 
   keyStates, 
-  showFingerGuide = true 
+  showFingerGuide = false 
 }: KeyboardVisualizationProps) => {
   const getKeyState = (key: string): KeyState['state'] => {
     const keyState = keyStates.find(ks => ks.key === key);
@@ -31,12 +31,12 @@ const KeyboardVisualization = ({
   };
 
   const getKeyClassName = (key: string, finger: number, state: KeyState['state']) => {
-    const baseClasses = "relative w-12 h-12 rounded-md border-2 border-key-border bg-key-base flex items-center justify-center text-sm font-medium transition-all duration-150";
+    const baseClasses = "relative w-10 h-10 rounded border border-key-border bg-key-base flex items-center justify-center text-xs font-mono font-medium transition-all duration-200";
     
     const stateClasses = {
-      idle: showFingerGuide ? FINGER_COLORS[finger] : '',
-      next: 'bg-key-next text-key-next border-key-next animate-pulse-glow',
-      active: 'bg-key-active text-white border-key-active animate-key-press',
+      idle: showFingerGuide ? FINGER_COLORS[finger] : 'hover:bg-muted/50',
+      next: 'bg-key-next text-white border-key-next ring-2 ring-key-next/30 animate-pulse',
+      active: 'bg-key-active text-white border-key-active scale-95',
       correct: 'bg-key-correct text-white border-key-correct',
       incorrect: 'bg-key-incorrect text-white border-key-incorrect'
     };
@@ -53,13 +53,8 @@ const KeyboardVisualization = ({
             key={keyMapping.qwerty}
             className={getKeyClassName(keyMapping.target, keyMapping.finger, state)}
           >
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">
-                {keyMapping.qwerty}
-              </div>
-              <div className="font-bold">
-                {keyMapping.target}
-              </div>
+            <div className="font-semibold">
+              {keyMapping.target.toUpperCase()}
             </div>
           </div>
         );
@@ -72,44 +67,18 @@ const KeyboardVisualization = ({
   const bottomRow = layout.keys.filter(k => k.row === 0);
 
   return (
-    <div className="bg-card p-6 rounded-lg border shadow-sm">
-      <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">{layout.name} Layout</h3>
-        <p className="text-sm text-muted-foreground">
-          QWERTY keys shown above, {layout.name} keys shown below
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        {renderKeyRow(topRow, "mb-1")}
-        {renderKeyRow(homeRow, "mb-1")}
+    <div className="bg-card/50 p-4 rounded-lg border">
+      <div className="space-y-1">
+        {renderKeyRow(topRow, "")}
+        {renderKeyRow(homeRow, "")}
         {renderKeyRow(bottomRow, "")}
       </div>
-
-      {showFingerGuide && (
-        <div className="mt-4 grid grid-cols-5 gap-2 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-200"></div>
-            <span>Pinkies</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-orange-200"></div>
-            <span>Ring</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-200"></div>
-            <span>Middle</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-200"></div>
-            <span>Index</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-200"></div>
-            <span>Thumbs</span>
-          </div>
-        </div>
-      )}
+      
+      <div className="mt-3 text-center">
+        <p className="text-xs text-muted-foreground">
+          {layout.name} Layout • Yellow = Next Key
+        </p>
+      </div>
     </div>
   );
 };

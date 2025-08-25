@@ -58,7 +58,8 @@ All colors MUST be HSL.
     --key-next: 35 85% 55%;
 
     /* Typography */
-    --typing-font: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-sans: 'Inter', 'Geist', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
     --radius: 0.5rem;
 

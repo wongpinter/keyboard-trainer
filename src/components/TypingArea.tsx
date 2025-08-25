@@ -133,19 +133,12 @@ const TypingArea = ({
   };
 
   return (
-    <div className="bg-card p-6 rounded-lg border shadow-sm">
-      <div className="mb-4 text-center">
-        <h3 className="text-lg font-semibold mb-2">Typing Exercise</h3>
-        <p className="text-sm text-muted-foreground">
-          Press ESC to reset • Focus will return automatically
-        </p>
-      </div>
-
+    <div className="space-y-4">
       <div 
-        className="p-4 bg-muted/30 rounded-md border-2 border-dashed border-muted-foreground/20 min-h-[120px] flex items-center cursor-text"
+        className="p-6 bg-card rounded-lg border-2 border-dashed border-muted-foreground/20 min-h-[100px] flex items-center cursor-text focus-within:border-primary/50 transition-colors"
         onClick={() => inputRef.current?.focus()}
       >
-        <div className="w-full leading-relaxed">
+        <div className="w-full leading-relaxed text-lg">
           {text.split('').map((char, index) => renderCharacter(char, index))}
         </div>
       </div>
@@ -158,12 +151,12 @@ const TypingArea = ({
         onBlur={() => inputRef.current?.focus()}
       />
 
-      <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
+      <div className="flex justify-between items-center text-sm text-muted-foreground">
         <div>
-          Progress: {currentIndex}/{text.length} characters
+          {currentIndex}/{text.length} characters
         </div>
         <div>
-          Press any key to start typing
+          Press ESC to reset
         </div>
       </div>
     </div>
