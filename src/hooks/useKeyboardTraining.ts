@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { KeyboardLayout, KeyState, TypingStats, LessonProgress } from '@/types/keyboard';
+import { TrainingLesson, generatePracticeText, colemakCurriculum } from '@/data/colemakTraining';
 
 export interface TrainingSession {
   currentLesson: number;
@@ -8,30 +9,111 @@ export interface TrainingSession {
   practiceText: string;
   keyStates: KeyState[];
   stats: TypingStats;
+  selectedLesson?: TrainingLesson;
+  lessonProgress: Record<string, { completed: boolean; bestWpm: number; bestAccuracy: number }>;
 }
 
 export const useKeyboardTraining = (layout: KeyboardLayout) => {
-  const [session, setSession] = useState<TrainingSession>(() => ({
-    currentLesson: 0,
-    currentStage: 0,
-    activeKeys: layout.learningOrder[0] || [],
-    practiceText: '',
-    keyStates: [],
-    stats: {
-      wpm: 0,
-      accuracy: 0,
-      totalCharacters: 0,
-      correctCharacters: 0,
-      incorrectCharacters: 0
-    }
-  }));
+  const [session, setSession] = useState<TrainingSession>(() => {
+    const firstLesson = colemakCurriculum.lessons[0];
+
+    return {
+      currentLesson: 0,
+      currentStage: 0,
+      activeKeys: firstLesson.focusKeys.length > 0 ? firstLesson.focusKeys : layout.learningOrder[0] || [],
+      practiceText: '', // Will be set in useEffect
+      keyStates: [],
+      stats: {
+        wpm: 0,
+        accuracy: 0,
+        totalCharacters: 0,
+        correctCharacters: 0,
+        incorrectCharacters: 0
+      },
+      selectedLesson: firstLesson,
+      lessonProgress: {}
+    };
+  });
 
   const [progress, setProgress] = useState<LessonProgress[]>([]);
 
-  // Generate practice text based on active keys
-  const generatePracticeText = useCallback((keys: string[], length: number = 50): string => {
+  // Initialize practice text after component mounts
+  useEffect(() => {
+    if (session.selectedLesson && !session.practiceText) {
+      const initialText = generatePracticeText(session.selectedLesson, 100);
+      setSession(prev => ({
+        ...prev,
+        practiceText: initialText
+      }));
+    }
+  }, [session.selectedLesson, session.practiceText]);
+
+  // Select a specific lesson
+  const selectLesson = useCallback((lesson: TrainingLesson) => {
+    const newPracticeText = generatePracticeText(lesson, 100);
+
+    setSession(prev => ({
+      ...prev,
+      selectedLesson: lesson,
+      practiceText: newPracticeText,
+      activeKeys: lesson.focusKeys.length > 0 ? lesson.focusKeys : layout.keys.map(k => k.target),
+      stats: {
+        wpm: 0,
+        accuracy: 0,
+        totalCharacters: 0,
+        correctCharacters: 0,
+        incorrectCharacters: 0
+      }
+    }));
+  }, [layout.keys]);
+
+  // Update lesson progress
+  const updateLessonProgress = useCallback((lessonId: string, wpm: number, accuracy: number) => {
+    setSession(prev => {
+      const currentProgress = prev.lessonProgress[lessonId] || { completed: false, bestWpm: 0, bestAccuracy: 0 };
+      const lesson = colemakCurriculum.lessons.find(l => l.id === lessonId);
+
+      if (!lesson) return prev;
+
+      const isCompleted = wpm >= lesson.minWpm && accuracy >= lesson.minAccuracy;
+      const newProgress = {
+        completed: isCompleted || currentProgress.completed,
+        bestWpm: Math.max(currentProgress.bestWpm, wpm),
+        bestAccuracy: Math.max(currentProgress.bestAccuracy, accuracy)
+      };
+
+      return {
+        ...prev,
+        lessonProgress: {
+          ...prev.lessonProgress,
+          [lessonId]: newProgress
+        }
+      };
+    });
+  }, []);
+
+  // Generate new practice text for current lesson
+  const generateNewPracticeText = useCallback(() => {
+    if (session.selectedLesson) {
+      const newText = generatePracticeText(session.selectedLesson, 100);
+      setSession(prev => ({
+        ...prev,
+        practiceText: newText,
+        stats: {
+          wpm: 0,
+          accuracy: 0,
+          totalCharacters: 0,
+          correctCharacters: 0,
+          incorrectCharacters: 0
+        }
+      }));
+    }
+  }, [session.selectedLesson]);
+
+  // Generate practice text based on active keys (for legacy key-based training)
+  const generateKeyBasedPracticeText = useCallback((keys: string[], length: number = 50): string => {
     if (keys.length === 0) return '';
-    
+
     let text = '';
     for (let i = 0; i < length; i++) {
       if (i > 0 && i % 10 === 0) {
@@ -57,7 +139,7 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     if (lessonIndex >= layout.learningOrder.length) return;
 
     const activeKeys = layout.learningOrder[lessonIndex];
-    const practiceText = generatePracticeText(activeKeys);
+    const practiceText = generateKeyBasedPracticeText(activeKeys);
     const keyStates = initializeKeyStates(activeKeys, practiceText[0]);
 
     setSession({
@@ -74,7 +156,7 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
         incorrectCharacters: 0
       }
     });
-  }, [layout.learningOrder, generatePracticeText, initializeKeyStates]);
+  }, [layout.learningOrder, generateKeyBasedPracticeText, initializeKeyStates]);
 
   // Handle key press during typing
   const handleKeyPress = useCallback((expectedKey: string, isCorrect: boolean) => {
@@ -165,6 +247,11 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     handleKeyPress,
     updateStats,
     completeLesson,
-    availableLessons: layout.learningOrder.length
+    availableLessons: layout.learningOrder.length,
+    // New lesson system functions
+    selectLesson,
+    updateLessonProgress,
+    generateNewPracticeText,
+    colemakLessons: colemakCurriculum.lessons
   };
 };

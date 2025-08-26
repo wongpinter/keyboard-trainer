@@ -6,14 +6,16 @@ import TypingArea from './TypingArea';
 import ProgressTracker from './ProgressTracker';
 import { RealTimeStats } from './statistics/RealTimeStats';
 import { FocusModeToggle } from './ui/focus-mode-toggle';
+import { LessonSelector } from './training/LessonSelector';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RotateCcw, Play, SkipForward } from 'lucide-react';
+import { RotateCcw, SkipForward, BookOpen, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const KeyboardTrainer = () => {
   const [showFingerGuide, setShowFingerGuide] = useState(true);
+  const [showLessonSelector, setShowLessonSelector] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -26,7 +28,11 @@ const KeyboardTrainer = () => {
     handleKeyPress,
     updateStats,
     completeLesson,
-    availableLessons
+    availableLessons,
+    selectLesson,
+    updateLessonProgress,
+    generateNewPracticeText,
+    colemakLessons
   } = useKeyboardTraining(COLEMAK_LAYOUT);
 
   const handleLessonComplete = () => {
@@ -38,7 +44,8 @@ const KeyboardTrainer = () => {
   };
 
   const currentKeys = session.activeKeys.join('').toUpperCase();
-  const lessonName = `Stage ${session.currentLesson + 1}`;
+  const lessonName = session.selectedLesson ? session.selectedLesson.name : `Stage ${session.currentLesson + 1}`;
+  const lessonDescription = session.selectedLesson ? session.selectedLesson.description : 'Progressive keyboard training';
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -64,6 +71,7 @@ const KeyboardTrainer = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold">{lessonName}</h2>
+              <p className="text-muted-foreground mb-2">{lessonDescription}</p>
               <p className="text-muted-foreground">
                 Learning keys: <Badge variant="secondary">{currentKeys}</Badge>
               </p>
@@ -84,6 +92,14 @@ const KeyboardTrainer = () => {
                 onClick={() => setShowFingerGuide(!showFingerGuide)}
               >
                 {showFingerGuide ? 'Hide' : 'Show'} Finger Guide
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLessonSelector(!showLessonSelector)}
+              >
+                <List className="w-4 h-4 mr-2" />
+                {showLessonSelector ? 'Hide' : 'Show'} Lessons
               </Button>
               {session.currentLesson < availableLessons - 1 && (
                 <Button
@@ -115,6 +131,23 @@ const KeyboardTrainer = () => {
 
         {/* Real-time Statistics */}
         <RealTimeStats className="mb-6" />
+
+        {/* Lesson Selector */}
+        {showLessonSelector && (
+          <LessonSelector
+            currentLessonId={session.selectedLesson?.id}
+            onLessonSelect={(lesson) => {
+              selectLesson(lesson);
+              setShowLessonSelector(false);
+              toast({
+                title: "Lesson Selected",
+                description: `Now practicing: ${lesson.name}`,
+              });
+            }}
+            userProgress={session.lessonProgress}
+            className="mb-6"
+          />
+        )}
 
         {/* Main Training Area */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
