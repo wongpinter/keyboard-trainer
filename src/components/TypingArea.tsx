@@ -3,6 +3,7 @@ import { KeyboardLayout, TypingStats } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
 import { useAnimations, scaleIn } from '@/hooks/useAnimations';
+import { useStatistics } from '@/hooks/useStatistics';
 // import { validateTypingText } from '@/utils/validation';
 // import { handleValidationError } from '@/utils/errorHandler';
 
@@ -29,7 +30,15 @@ const TypingArea = ({
   const isMountedRef = useRef(true);
   const { preferences } = useAccessibility();
   const { createAnimationConfig } = useAnimations();
+  const {
+    startSession,
+    recordKeystroke,
+    recordMistake,
+    endSession,
+    isSessionActive
+  } = useStatistics();
   const completionRef = useRef<HTMLDivElement>(null);
+  const lastKeystrokeTime = useRef<number>(Date.now());
 
   // Validate practice text on mount and when text changes
   // useEffect(() => {
@@ -69,6 +78,10 @@ const TypingArea = ({
       // Start timing on first keystroke
       if (startTime === null) {
         setStartTime(Date.now());
+        // Start statistics session if not already active
+        if (!isSessionActive) {
+          startSession(layout.name);
+        }
       }
 
       const expectedChar = text[currentIndex];
@@ -77,11 +90,37 @@ const TypingArea = ({
       // Only process printable characters
       if (e.key.length === 1) {
         const isCorrect = typedChar === expectedChar;
-        
+        const currentTime = Date.now();
+        const timeSinceLastKey = currentTime - lastKeystrokeTime.current;
+
+        // Record keystroke for statistics
+        const keyMapping = layout.keys.find(k => k.target === expectedChar);
+        if (keyMapping) {
+          recordKeystroke({
+            key: expectedChar,
+            isCorrect,
+            timeSinceLastKey,
+            expectedKey: expectedChar,
+            finger: keyMapping.finger
+          });
+
+          // Record mistake if incorrect
+          if (!isCorrect) {
+            recordMistake({
+              expectedKey: expectedChar,
+              actualKey: typedChar,
+              position: currentIndex,
+              finger: keyMapping.finger
+            });
+          }
+        }
+
+        lastKeystrokeTime.current = currentTime;
+
         setTypedText(prev => prev + typedChar);
         setErrors(prev => [...prev, !isCorrect]);
         setCurrentIndex(prev => prev + 1);
-        
+
         onKeyPress(expectedChar, isCorrect);
 
         // Update stats
@@ -91,6 +130,11 @@ const TypingArea = ({
         // Check completion
         if (currentIndex + 1 >= text.length) {
           onComplete();
+
+          // End statistics session
+          if (isSessionActive) {
+            endSession();
+          }
 
           // Animate completion
           if (completionRef.current) {

@@ -4,6 +4,7 @@ import { useKeyboardTraining } from '@/hooks/useKeyboardTraining';
 import KeyboardVisualization from './KeyboardVisualization';
 import TypingArea from './TypingArea';
 import ProgressTracker from './ProgressTracker';
+import { RealTimeStats } from './statistics/RealTimeStats';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -104,6 +105,9 @@ const KeyboardTrainer = () => {
             </div>
           </div>
         </Card>
+
+        {/* Real-time Statistics */}
+        <RealTimeStats className="mb-6" />
 
         {/* Main Training Area */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
