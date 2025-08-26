@@ -113,6 +113,31 @@ const colemakDHSentences = [
   "The team is in a meeting."
 ];
 
+// Colemak bigram training sets for muscle memory development
+const homeRowRolls = [
+  "he he he", "ar ar ar", "er er er", "in in in", "ne ne ne", "re re re", "es es es", "an an an",
+  "at at at", "on on on", "or or or", "to to to", "ha ha ha", "hi hi hi", "ho ho ho", "as as as",
+  "is is is", "it it it", "en en en", "et et et", "ed ed ed", "do do do", "so so so", "se se se"
+];
+
+const highFrequencyRolls = [
+  "th th th", "ou ou ou", "ea ea ea", "ro ro ro", "le le le", "ve ve ve", "co co co", "al al al",
+  "ti ti ti", "de de de", "fo fo fo", "wh wh wh", "sh sh sh", "ur ur ur", "pe pe pe", "yo yo yo",
+  "li li li", "ch ch ch", "ll ll ll", "be be be", "ma ma ma", "of of of", "nd nd nd", "ng ng ng"
+];
+
+const sameHandCombinations = [
+  "st st st", "oi oi oi", "pl pl pl", "ly ly ly", "pr pr pr", "tr tr tr", "dr dr dr", "gr gr gr",
+  "io io io", "ai ai ai", "ui ui ui", "ac ac ac", "im im im", "po po po", "ic ic ic", "ag ag ag",
+  "sp sp sp", "bl bl bl", "cl cl cl", "gl gl gl", "sl sl sl", "cr cr cr", "fr fr fr", "br br br"
+];
+
+const sameFingerBigrams = [
+  "sd sd sd", "ju ju ju", "fr fr fr", "lo lo lo", "ki ki ki", "ny ny ny", "de de de", "ce ce ce",
+  "gr gr gr", "my my my", "br br br", "cd cd cd", "mu mu mu", "fv fv fv", "ki ki ki", "lo lo lo",
+  "um um um", "ik ik ik", "rf rf rf", "lo lo lo", "ik ik ik", "uj uj uj", "ds ds ds", "uj uj uj"
+];
+
 // Helper function to generate practice text
 export const generatePracticeText = (lesson: TrainingLesson, length: number = 100): string => {
   // Ensure we have a valid lesson
@@ -330,9 +355,66 @@ export const colemakCurriculum: TrainingCurriculum = {
       content: generateMixedContent(colemakDHWords, colemakDHSentences, 20),
       minAccuracy: 92,
       minWpm: 28
+    },
+    // Colemak bigram training lessons for muscle memory development
+    {
+      id: "colemak-bigrams-home-row",
+      name: "Home Row Rolls",
+      description: "The fastest alternating-hand movements on the home row - core of Colemak's strength",
+      type: "words",
+      difficulty: "beginner",
+      focusKeys: ["a", "r", "s", "t", "n", "e", "i", "o"],
+      content: homeRowRolls,
+      minAccuracy: 90,
+      minWpm: 20
+    },
+    {
+      id: "colemak-bigrams-high-frequency",
+      name: "High Frequency Rolls",
+      description: "Common English bigrams with comfortable inward and outward rolls",
+      type: "words",
+      difficulty: "intermediate",
+      focusKeys: [], // All keys
+      content: highFrequencyRolls,
+      minAccuracy: 88,
+      minWpm: 25
+    },
+    {
+      id: "colemak-bigrams-same-hand",
+      name: "Same Hand Combinations",
+      description: "Bigrams typed with one hand using different fingers - builds dexterity",
+      type: "words",
+      difficulty: "intermediate",
+      focusKeys: [], // All keys
+      content: sameHandCombinations,
+      minAccuracy: 85,
+      minWpm: 22
+    },
+    {
+      id: "colemak-bigrams-same-finger",
+      name: "Same Finger Bigrams",
+      description: "Challenging same-finger bigrams - focus on accuracy over speed",
+      type: "words",
+      difficulty: "advanced",
+      focusKeys: [], // All keys
+      content: sameFingerBigrams,
+      minAccuracy: 80,
+      minWpm: 18
     }
   ]
 };
+
+// Bigram training tips for optimal practice
+export const bigramTrainingTips = [
+  "Focus on accuracy over speed. Speed will come naturally as your accuracy improves.",
+  "Try to type with a steady rhythm. Using a metronome can help.",
+  "Do not bottom out the keys; use a light touch.",
+  "Mix and match from different categories in your practice sessions.",
+  "Home row rolls should feel smooth and effortless - they're Colemak's strength.",
+  "Same finger bigrams are the most challenging - be patient and focus on precision.",
+  "Practice same hand combinations to build finger independence and dexterity.",
+  "Take breaks between sessions to avoid fatigue and maintain good form."
+];
 
 // Helper functions for lesson management
 export const getLessonById = (id: string): TrainingLesson | undefined => {
