@@ -14,17 +14,13 @@ import {
   ChevronRight,
   Trophy
 } from 'lucide-react';
-import { 
-  TrainingLesson, 
-  colemakCurriculum, 
-  getLessonsByType, 
-  getLessonsByDifficulty 
-} from '@/data/colemakTraining';
+import { useCurriculums, useUserProgress, useAuth } from '@/hooks/useDatabase';
+import { TrainingLessonDB, ExtendedUserProgress } from '@/types/database';
 import { cn } from '@/lib/utils';
 
 interface LessonSelectorProps {
   currentLessonId?: string;
-  onLessonSelect: (lesson: TrainingLesson) => void;
+  onLessonSelect: (lesson: TrainingLessonDB) => void;
   userProgress?: Record<string, { completed: boolean; bestWpm: number; bestAccuracy: number }>;
   className?: string;
 }
@@ -36,6 +32,44 @@ export const LessonSelector: React.FC<LessonSelectorProps> = ({
   className
 }) => {
   const [selectedTab, setSelectedTab] = useState<'type' | 'difficulty'>('type');
+  const { user } = useAuth();
+  const { curriculums, loading: curriculumsLoading } = useCurriculums();
+  const { progress } = useUserProgress(user?.id || '');
+
+  // Get the main Colemak curriculum
+  const mainCurriculum = curriculums.find(c => c.name === 'Complete Colemak Training');
+  const allLessons = mainCurriculum?.lessons || [];
+
+  // Helper functions to filter lessons by type and difficulty
+  const getLessonsByType = (type: string) => allLessons.filter(lesson => lesson.type === type);
+  const getLessonsByDifficulty = (difficulty: string) => allLessons.filter(lesson => lesson.difficulty === difficulty);
+
+  // Show loading state
+  if (curriculumsLoading) {
+    return (
+      <div className={cn("space-y-6", className)}>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading lessons...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no curriculum found
+  if (!mainCurriculum) {
+    return (
+      <div className={cn("space-y-6", className)}>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <p className="text-muted-foreground">No training curriculum found. Please run the database migration first.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getLessonIcon = (type: string) => {
     switch (type) {
@@ -64,7 +98,7 @@ export const LessonSelector: React.FC<LessonSelectorProps> = ({
     }
   };
 
-  const renderLessonCard = (lesson: TrainingLesson) => {
+  const renderLessonCard = (lesson: TrainingLessonDB) => {
     const progress = userProgress[lesson.id];
     const isCompleted = progress?.completed || false;
     const isCurrent = currentLessonId === lesson.id;
@@ -159,35 +193,37 @@ export const LessonSelector: React.FC<LessonSelectorProps> = ({
   return (
     <div className={cn("space-y-6", className)}>
       {/* Curriculum Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            {colemakCurriculum.name}
-          </CardTitle>
-          <CardDescription>{colemakCurriculum.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-primary">{colemakCurriculum.lessons.length}</div>
-              <div className="text-sm text-muted-foreground">Total Lessons</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">
-                {Object.values(userProgress).filter(p => p.completed).length}
+      {mainCurriculum && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              {mainCurriculum.name}
+            </CardTitle>
+            <CardDescription>{mainCurriculum.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-primary">{allLessons.length}</div>
+                <div className="text-sm text-muted-foreground">Total Lessons</div>
               </div>
-              <div className="text-sm text-muted-foreground">Completed</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-blue-600">
-                {Math.round((Object.values(userProgress).filter(p => p.completed).length / colemakCurriculum.lessons.length) * 100)}%
+              <div>
+                <div className="text-2xl font-bold text-green-600">
+                  {progress.filter(p => p.completed_at !== null).length}
+                </div>
+                <div className="text-sm text-muted-foreground">Completed</div>
               </div>
-              <div className="text-sm text-muted-foreground">Progress</div>
+              <div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {allLessons.length > 0 ? Math.round((progress.filter(p => p.completed_at !== null).length / allLessons.length) * 100) : 0}%
+                </div>
+                <div className="text-sm text-muted-foreground">Progress</div>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Lesson Selection */}
       <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as 'type' | 'difficulty')}>

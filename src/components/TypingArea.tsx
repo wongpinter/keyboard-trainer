@@ -252,6 +252,7 @@ const TypingArea = ({
       {isFocusMode && (
         <FocusMode
           text={text}
+          layout={layout}
           onComplete={onComplete}
           onKeyPress={onKeyPress}
         />
