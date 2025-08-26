@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curriculum Migration Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.2s;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Curriculum Migration Tool</h1>
+        
+        <div class="status info">
+            <strong>📋 What this does:</strong><br>
+            This tool exports all static training curriculum data from the codebase to the Supabase database.
+            It will create comprehensive Colemak training curriculums with all lessons, content, and metadata.
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button id="migrateBtn" class="button">🚀 Export Curriculum to Database</button>
+            <button id="validateBtn" class="button">🔍 Validate Only (Dry Run)</button>
+            <button id="clearBtn" class="button" style="background: #6c757d;">🗑️ Clear Log</button>
+        </div>
+
+        <div id="log" class="log" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        const logElement = document.getElementById('log');
+        const migrateBtn = document.getElementById('migrateBtn');
+        const validateBtn = document.getElementById('validateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        function log(message, type = 'info') {
+            logElement.style.display = 'block';
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            logElement.textContent = '';
+            logElement.style.display = 'none';
+        }
+
+        clearBtn.addEventListener('click', clearLog);
+
+        migrateBtn.addEventListener('click', async () => {
+            migrateBtn.disabled = true;
+            validateBtn.disabled = true;
+            
+            log('🚀 Starting curriculum migration...', 'info');
+            
+            try {
+                // Import the migration function
+                const { migrateTrainingData } = await import('/src/scripts/migrateTrainingData.ts');
+                
+                const result = await migrateTrainingData({
+                    dryRun: false,
+                    overwrite: true,
+                    validateOnly: false
+                });
+
+                if (result.success) {
+                    log(`✅ Migration completed successfully!`, 'success');
+                    log(`📊 Migrated ${result.migratedCount} curriculums`, 'success');
+                    
+                    if (result.warnings.length > 0) {
+                        log('⚠️  Warnings:', 'warning');
+                        result.warnings.forEach(warning => log(`   - ${warning}`, 'warning'));
+                    }
+                } else {
+                    log('❌ Migration failed!', 'error');
+                    if (result.errors.length > 0) {
+                        log('🔥 Errors:', 'error');
+                        result.errors.forEach(error => log(`   - ${error}`, 'error'));
+                    }
+                }
+            } catch (error) {
+                log(`💥 Migration script failed: ${error.message}`, 'error');
+                console.error('Migration error:', error);
+            } finally {
+                migrateBtn.disabled = false;
+                validateBtn.disabled = false;
+            }
+        });
+
+        validateBtn.addEventListener('click', async () => {
+            migrateBtn.disabled = true;
+            validateBtn.disabled = true;
+            
+            log('🔍 Validating curriculum data...', 'info');
+            
+            try {
+                const { migrateTrainingData } = await import('/src/scripts/migrateTrainingData.ts');
+                
+                const result = await migrateTrainingData({
+                    dryRun: true,
+                    overwrite: false,
+                    validateOnly: true
+                });
+
+                if (result.success) {
+                    log('✅ Validation passed! Curriculum data is ready for migration.', 'success');
+                } else {
+                    log('❌ Validation failed!', 'error');
+                    if (result.errors.length > 0) {
+                        result.errors.forEach(error => log(`   - ${error}`, 'error'));
+                    }
+                }
+            } catch (error) {
+                log(`💥 Validation failed: ${error.message}`, 'error');
+                console.error('Validation error:', error);
+            } finally {
+                migrateBtn.disabled = false;
+                validateBtn.disabled = false;
+            }
+        });
+
+        // Initial log message
+        log('📋 Ready to export curriculum data to database. Click "Export Curriculum to Database" to begin.');
+    </script>
+</body>
+</html>

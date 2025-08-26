@@ -54,10 +54,10 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
     endDate: new Date(),
     totalSessions: sessions.length,
     totalPracticeTime: sessions.reduce((sum, s) => sum + (s.practice_time || 0), 0),
-    averageWpm: sessions.reduce((sum, s) => sum + s.wpm, 0) / sessions.length,
-    averageAccuracy: sessions.reduce((sum, s) => sum + s.accuracy, 0) / sessions.length,
-    wpmTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: s.wpm })),
-    accuracyTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: s.accuracy })),
+    averageWpm: sessions.reduce((sum, s) => sum + parseFloat(s.wpm.toString()), 0) / sessions.length,
+    averageAccuracy: sessions.reduce((sum, s) => sum + parseFloat(s.accuracy.toString()), 0) / sessions.length,
+    wpmTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: parseFloat(s.wpm.toString()) })),
+    accuracyTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: parseFloat(s.accuracy.toString()) })),
     consistencyScore: 85, // TODO: Calculate from session data
     improvementRate: 15, // TODO: Calculate from trends
     mostCommonMistakes: [],
