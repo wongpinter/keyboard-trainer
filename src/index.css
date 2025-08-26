@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Learning App Color Palette */
+    /* Learning App Color Palette - Light Mode */
     --background: 220 15% 97%;
     --foreground: 220 25% 15%;
 
@@ -119,12 +119,90 @@ All colors MUST be HSL.
   }
 }
 
+  /* Dark Mode Color Palette */
+  .dark {
+    --background: 220 15% 8%;
+    --foreground: 220 15% 92%;
+
+    --card: 220 15% 10%;
+    --card-foreground: 220 15% 92%;
+
+    --popover: 220 15% 10%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 210 85% 55%;
+    --primary-foreground: 220 15% 8%;
+    --primary-glow: 210 85% 75%;
+
+    --success: 145 65% 55%;
+    --success-foreground: 220 15% 8%;
+    --success-glow: 145 65% 75%;
+
+    --learning: 45 85% 55%;
+    --learning-foreground: 220 15% 8%;
+    --learning-glow: 45 85% 75%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-glow: 0 75% 75%;
+
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 220 15% 85%;
+
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 15% 65%;
+
+    --accent: 220 15% 15%;
+    --accent-foreground: 220 15% 85%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 15%;
+    --ring: 210 85% 55%;
+
+    /* Keyboard-specific colors for dark mode */
+    --key-base: 220 15% 15%;
+    --key-border: 220 15% 25%;
+    --key-next: 210 85% 55%;
+    --key-active: 145 65% 55%;
+    --key-correct: 145 65% 55%;
+    --key-incorrect: 0 75% 55%;
+
+    /* Chart colors for dark mode */
+    --chart-1: 210 85% 55%;
+    --chart-2: 145 65% 55%;
+    --chart-3: 45 85% 55%;
+    --chart-4: 280 65% 55%;
+    --chart-5: 340 75% 55%;
+  }
+
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans transition-colors duration-300;
+  }
+
+  /* Smooth transitions for theme changes */
+  html {
+    @apply transition-colors duration-300;
+  }
+
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
   }
 }

@@ -1,5 +1,6 @@
 import { KeyboardLayout, KeyState } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
+import { useTheme, getThemeColors } from '@/contexts/ThemeContext';
 
 interface KeyboardVisualizationProps {
   layout: KeyboardLayout;
@@ -7,38 +8,33 @@ interface KeyboardVisualizationProps {
   showFingerGuide?: boolean;
 }
 
-const FINGER_COLORS = [
-  'bg-red-200',      // Left pinky
-  'bg-orange-200',   // Left ring
-  'bg-yellow-200',   // Left middle
-  'bg-green-200',    // Left index
-  'bg-blue-200',     // Left thumb
-  'bg-blue-200',     // Right thumb
-  'bg-green-200',    // Right index
-  'bg-yellow-200',   // Right middle
-  'bg-orange-200',   // Right ring
-  'bg-red-200'       // Right pinky
-];
-
-const KeyboardVisualization = ({ 
-  layout, 
-  keyStates, 
-  showFingerGuide = false 
+const KeyboardVisualization = ({
+  layout,
+  keyStates,
+  showFingerGuide = false
 }: KeyboardVisualizationProps) => {
+  const { resolvedTheme } = useTheme();
+  const themeColors = getThemeColors(resolvedTheme);
+
+  // Get finger colors based on current theme
+  const fingerColors = themeColors.fingerColors;
   const getKeyState = (key: string): KeyState['state'] => {
     const keyState = keyStates.find(ks => ks.key === key);
     return keyState?.state || 'idle';
   };
 
-  const getKeyClassName = (key: string, finger: number, state: KeyState['state']) => {
-    const baseClasses = "relative w-10 h-10 rounded border border-key-border bg-key-base flex items-center justify-center text-xs font-mono font-medium transition-all duration-200";
-    
+  const getKeyClassName = (finger: number, state: KeyState['state']) => {
+    const baseClasses = "relative w-10 h-10 rounded border transition-all duration-200 flex items-center justify-center text-xs font-mono font-medium";
+
+    // Use theme-aware colors
+    const keyStateColors = themeColors.keyStates;
+
     const stateClasses = {
-      idle: showFingerGuide ? FINGER_COLORS[finger] : 'hover:bg-muted/50',
-      next: 'bg-key-next text-white border-key-next ring-2 ring-key-next/30 animate-pulse',
-      active: 'bg-key-active text-white border-key-active scale-95',
-      correct: 'bg-key-correct text-white border-key-correct',
-      incorrect: 'bg-key-incorrect text-white border-key-incorrect'
+      idle: showFingerGuide ? fingerColors[finger] : keyStateColors.idle,
+      next: keyStateColors.next,
+      active: keyStateColors.active,
+      correct: keyStateColors.correct,
+      incorrect: keyStateColors.incorrect
     };
 
     return cn(baseClasses, stateClasses[state]);
@@ -51,7 +47,7 @@ const KeyboardVisualization = ({
         return (
           <div
             key={keyMapping.qwerty}
-            className={getKeyClassName(keyMapping.target, keyMapping.finger, state)}
+            className={getKeyClassName(keyMapping.finger, state)}
           >
             <div className="font-semibold">
               {keyMapping.target.toUpperCase()}

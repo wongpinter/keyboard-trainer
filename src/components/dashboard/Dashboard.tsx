@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
@@ -119,6 +120,7 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground">
               Welcome, {profile?.display_name || profile?.username || user.email}
             </span>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
