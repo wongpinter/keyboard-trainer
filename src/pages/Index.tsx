@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
+import { FocusModeToggle } from '@/components/ui/focus-mode-toggle';
 import { AnimatedContainer, AnimatedButton } from '@/components/ui/animated-components';
 import { Keyboard, ArrowRight, Star, Users, BookOpen, Zap } from 'lucide-react';
 
@@ -59,6 +60,7 @@ const Index = () => {
             <span className="text-xl font-bold">Keyboard Trainer</span>
           </div>
           <div className="flex items-center space-x-4">
+            <FocusModeToggle />
             <AccessibilitySettings />
             <ThemeToggle />
             {isAuthenticated ? (

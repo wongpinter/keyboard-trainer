@@ -5,6 +5,7 @@ import KeyboardVisualization from './KeyboardVisualization';
 import TypingArea from './TypingArea';
 import ProgressTracker from './ProgressTracker';
 import { RealTimeStats } from './statistics/RealTimeStats';
+import { FocusModeToggle } from './ui/focus-mode-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,13 +44,19 @@ const KeyboardTrainer = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Keyboard Layout Trainer
-          </h1>
-          <p className="text-muted-foreground">
-            Master alternative keyboard layouts through progressive training
-          </p>
+        <header className="mb-6">
+          <div className="flex items-center justify-between">
+            <div></div>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Keyboard Layout Trainer
+              </h1>
+              <p className="text-muted-foreground">
+                Master alternative keyboard layouts through progressive training
+              </p>
+            </div>
+            <FocusModeToggle />
+          </div>
         </header>
 
         {/* Lesson Info */}
