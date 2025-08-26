@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
 import Index from "./pages/Index";
+import Statistics from "./pages/Statistics";
 import AuthPage from "./components/auth/AuthPage";
 import Dashboard from "./components/dashboard/Dashboard";
 import KeyboardTrainer from "./components/KeyboardTrainer";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/statistics" element={<Statistics />} />
               <Route path="/trainer" element={<KeyboardTrainer />} />
               {/* Developer-only migration route */}
               {import.meta.env.DEV && (

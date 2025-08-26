@@ -25,6 +25,37 @@ interface StatisticsDashboardProps {
   className?: string;
 }
 
+// Helper functions for calculations
+const calculateConsistencyScore = (sessions: any[]): number => {
+  if (sessions.length < 2) return 100;
+
+  const wpmValues = sessions.map(s => parseFloat(s.wpm.toString()));
+  const avgWpm = wpmValues.reduce((sum, wpm) => sum + wpm, 0) / wpmValues.length;
+  const variance = wpmValues.reduce((sum, wpm) => sum + Math.pow(wpm - avgWpm, 2), 0) / wpmValues.length;
+  const standardDeviation = Math.sqrt(variance);
+
+  // Convert to consistency score (0-100, higher is better)
+  const coefficientOfVariation = avgWpm > 0 ? standardDeviation / avgWpm : 0;
+  return Math.max(0, Math.round(100 - (coefficientOfVariation * 100)));
+};
+
+const calculateImprovementRate = (sessions: any[]): number => {
+  if (sessions.length < 5) return 0;
+
+  // Sort sessions by date
+  const sortedSessions = [...sessions].sort((a, b) =>
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
+  const firstHalf = sortedSessions.slice(0, Math.floor(sortedSessions.length / 2));
+  const secondHalf = sortedSessions.slice(Math.floor(sortedSessions.length / 2));
+
+  const firstHalfAvg = firstHalf.reduce((sum, s) => sum + parseFloat(s.wpm.toString()), 0) / firstHalf.length;
+  const secondHalfAvg = secondHalf.reduce((sum, s) => sum + parseFloat(s.wpm.toString()), 0) / secondHalf.length;
+
+  return Math.round(((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100);
+};
+
 export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
   layoutId,
   className
@@ -58,8 +89,8 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
     averageAccuracy: sessions.reduce((sum, s) => sum + parseFloat(s.accuracy.toString()), 0) / sessions.length,
     wpmTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: parseFloat(s.wpm.toString()) })),
     accuracyTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: parseFloat(s.accuracy.toString()) })),
-    consistencyScore: 85, // TODO: Calculate from session data
-    improvementRate: 15, // TODO: Calculate from trends
+    consistencyScore: calculateConsistencyScore(sessions),
+    improvementRate: calculateImprovementRate(sessions),
     mostCommonMistakes: [],
     keyPerformance: [],
     sessionDistribution: []
