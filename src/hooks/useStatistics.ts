@@ -1,16 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 // import { useAuth } from '@/contexts/AuthContext'; // TODO: Implement auth context
-import { 
-  TypingSession, 
-  UserProgress, 
-  PerformanceMetrics, 
+import {
+  TypingSession,
+  UserProgress,
+  PerformanceMetrics,
   LearningInsights,
   Achievement,
   StatisticsPeriod,
   KeystrokeData,
-  MistakeData
+  MistakeData,
+  LetterAnalytics,
+  FingerAnalytics,
+  ErrorPattern,
+  AdaptiveTraining,
+  EnhancedPerformanceMetrics
 } from '@/types/statistics';
 import { statisticsCalculator } from '@/utils/statisticsCalculator';
+import { letterAnalyticsCalculator } from '@/utils/letterAnalytics';
+import { adaptiveTrainingGenerator } from '@/utils/adaptiveTraining';
 
 // Mock data for development - replace with actual API calls
 const MOCK_ACHIEVEMENTS: Achievement[] = [
@@ -66,14 +73,20 @@ interface UseStatisticsReturn {
   // Current session data
   currentSession: TypingSession | null;
   isSessionActive: boolean;
-  
+
   // User progress
   userProgress: UserProgress | null;
   achievements: Achievement[];
-  
+
   // Performance metrics
   performanceMetrics: PerformanceMetrics | null;
   learningInsights: LearningInsights | null;
+
+  // Letter analytics
+  letterAnalytics: LetterAnalytics[];
+  fingerAnalytics: FingerAnalytics[];
+  errorPatterns: ErrorPattern[];
+  adaptiveTraining: AdaptiveTraining | null;
   
   // Session management
   startSession: (layoutId: string, lessonId?: string) => void;
@@ -85,6 +98,8 @@ interface UseStatisticsReturn {
   loadUserProgress: (layoutId: string) => Promise<void>;
   loadPerformanceMetrics: (layoutId: string, period: StatisticsPeriod) => Promise<void>;
   loadLearningInsights: (layoutId: string) => Promise<void>;
+  loadLetterAnalytics: (layoutId: string) => Promise<void>;
+  generateAdaptiveTraining: (layoutId: string) => Promise<void>;
   
   // Utilities
   calculateCurrentStats: () => {
@@ -110,6 +125,11 @@ export const useStatistics = (): UseStatisticsReturn => {
   const [achievements, setAchievements] = useState<Achievement[]>(MOCK_ACHIEVEMENTS);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [learningInsights, setLearningInsights] = useState<LearningInsights | null>(null);
+  const [letterAnalytics, setLetterAnalytics] = useState<LetterAnalytics[]>([]);
+  const [fingerAnalytics, setFingerAnalytics] = useState<FingerAnalytics[]>([]);
+  const [errorPatterns, setErrorPatterns] = useState<ErrorPattern[]>([]);
+  const [adaptiveTraining, setAdaptiveTraining] = useState<AdaptiveTraining | null>(null);
+  const [userSessions, setUserSessions] = useState<TypingSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -402,6 +422,94 @@ export const useStatistics = (): UseStatisticsReturn => {
     }
   }, [user]);
 
+  const loadLetterAnalytics = useCallback(async (layoutId: string) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      // In a real app, load user sessions from database
+      // For now, use existing sessions or mock data
+      const sessions = userSessions.length > 0 ? userSessions : [
+        // Mock session data for demonstration
+        {
+          id: 'mock-session-1',
+          userId: user.id,
+          layoutId,
+          startTime: new Date(Date.now() - 86400000),
+          endTime: new Date(Date.now() - 86400000 + 300000),
+          duration: 300,
+          textLength: 100,
+          wpm: 25,
+          accuracy: 88,
+          correctCharacters: 88,
+          incorrectCharacters: 12,
+          totalCharacters: 100,
+          errorRate: 12,
+          consistency: 75,
+          keystrokes: [
+            { key: 'a', timestamp: 1000, isCorrect: true, timeSinceLastKey: 200, expectedKey: 'a', finger: 3 },
+            { key: 's', timestamp: 1200, isCorrect: true, timeSinceLastKey: 200, expectedKey: 's', finger: 2 },
+            { key: 'd', timestamp: 1400, isCorrect: false, timeSinceLastKey: 200, expectedKey: 'f', finger: 1 },
+          ],
+          mistakes: [
+            { expectedKey: 'f', actualKey: 'd', position: 2, timestamp: 1400, finger: 1, frequency: 1 }
+          ],
+          createdAt: new Date(Date.now() - 86400000)
+        } as TypingSession
+      ];
+
+      // Analyze letter performance
+      const letters = letterAnalyticsCalculator.analyzeLetterPerformance(sessions);
+      setLetterAnalytics(letters);
+
+      // Analyze finger performance
+      const fingers = letterAnalyticsCalculator.analyzeFingerPerformance(sessions, letters);
+      setFingerAnalytics(fingers);
+
+      // Analyze error patterns
+      const allMistakes = sessions.flatMap(s => s.mistakes);
+      const patterns = letterAnalyticsCalculator.analyzeErrorPatterns(allMistakes);
+      setErrorPatterns(patterns);
+
+      // Store sessions for future use
+      setUserSessions(sessions);
+
+    } catch (err) {
+      setError('Failed to load letter analytics');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, userSessions]);
+
+  const generateAdaptiveTraining = useCallback(async (layoutId: string) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      // Use existing sessions or load from database
+      const sessions = userSessions.length > 0 ? userSessions : [];
+
+      if (sessions.length === 0) {
+        // Load letter analytics first to get mock sessions
+        await loadLetterAnalytics(layoutId);
+        return;
+      }
+
+      const training = await adaptiveTrainingGenerator.generateAdaptiveTraining(
+        user.id,
+        layoutId,
+        sessions
+      );
+
+      setAdaptiveTraining(training);
+
+    } catch (err) {
+      setError('Failed to generate adaptive training');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, userSessions, loadLetterAnalytics]);
+
   // Calculate current session statistics
   const calculateCurrentStats = useCallback(() => {
     if (!currentSession) {
@@ -430,7 +538,13 @@ export const useStatistics = (): UseStatisticsReturn => {
     // Performance metrics
     performanceMetrics,
     learningInsights,
-    
+
+    // Letter analytics
+    letterAnalytics,
+    fingerAnalytics,
+    errorPatterns,
+    adaptiveTraining,
+
     // Session management
     startSession,
     recordKeystroke,
@@ -441,6 +555,8 @@ export const useStatistics = (): UseStatisticsReturn => {
     loadUserProgress,
     loadPerformanceMetrics,
     loadLearningInsights,
+    loadLetterAnalytics,
+    generateAdaptiveTraining,
     
     // Utilities
     calculateCurrentStats,
