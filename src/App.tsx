@@ -11,6 +11,12 @@ import AuthPage from "./components/auth/AuthPage";
 import Dashboard from "./components/dashboard/Dashboard";
 import KeyboardTrainer from "./components/KeyboardTrainer";
 import NotFound from "./pages/NotFound";
+import DevMigration from "./pages/DevMigration";
+
+// Import migration script to make it available globally (dev only)
+if (import.meta.env.DEV) {
+  import("./scripts/migrateTrainingData");
+}
 
 const queryClient = new QueryClient();
 
@@ -28,6 +34,10 @@ const App = () => (
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/trainer" element={<KeyboardTrainer />} />
+              {/* Developer-only migration route */}
+              {import.meta.env.DEV && (
+                <Route path="/dev/migration" element={<DevMigration />} />
+              )}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

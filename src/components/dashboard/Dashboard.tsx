@@ -206,6 +206,7 @@ const Dashboard = () => {
               <TabsTrigger value="curriculums">Curriculums</TabsTrigger>
               <TabsTrigger value="statistics">Statistics</TabsTrigger>
               <TabsTrigger value="layouts">Layout Builder</TabsTrigger>
+              {/* Migration tab removed - should only be accessible to developers */}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
