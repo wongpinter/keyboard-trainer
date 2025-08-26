@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Keyboard, ArrowRight, Star, Users, BookOpen, Zap } from 'lucide-react';
 
 const Index = () => {
@@ -44,6 +45,7 @@ const Index = () => {
             <span className="text-xl font-bold">Keyboard Trainer</span>
           </div>
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             {isAuthenticated ? (
               <Button onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
