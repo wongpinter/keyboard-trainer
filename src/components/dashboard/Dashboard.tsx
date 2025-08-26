@@ -151,6 +151,10 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/statistics')}>
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </Button>
             <span className="text-sm text-muted-foreground">
               Welcome, {profile?.display_name || profile?.username || user.email}
             </span>
@@ -180,15 +184,75 @@ const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="curriculums">Curriculums</TabsTrigger>
-              <TabsTrigger value="statistics">Statistics</TabsTrigger>
               <TabsTrigger value="layouts">Layout Builder</TabsTrigger>
-              {/* Migration tab removed - should only be accessible to developers */}
+              {/* Statistics moved to dedicated page - removed redundancy */}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
+              {/* Quick Stats Overview - Essential metrics only */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Today's Progress</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {statistics?.totalSessions || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Sessions completed today
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Current WPM</CardTitle>
+                    <Zap className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {Math.round(statistics?.averageWpm || 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Average typing speed
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Accuracy</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {Math.round(statistics?.averageAccuracy || 0)}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Current accuracy rate
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Streak</CardTitle>
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">7</div>
+                    <p className="text-xs text-muted-foreground">
+                      Days practicing
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -273,13 +337,17 @@ const Dashboard = () => {
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
                     <CardDescription>
-                      Jump into practice or manage your layouts
+                      Jump into practice or view detailed analytics
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button className="w-full justify-start" onClick={() => navigate('/trainer')}>
                       <Keyboard className="w-4 h-4 mr-2" />
                       Continue Practice
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/statistics')}>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      View Analytics
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <Plus className="w-4 h-4 mr-2" />
@@ -319,9 +387,7 @@ const Dashboard = () => {
               <CurriculumList />
             </TabsContent>
 
-            <TabsContent value="statistics">
-              <UserStats userId={user.id} />
-            </TabsContent>
+
 
             <TabsContent value="layouts">
               <LayoutBuilder />
