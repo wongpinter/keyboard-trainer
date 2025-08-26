@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
+import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard';
 import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
@@ -224,6 +225,9 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Statistics Dashboard */}
+              <StatisticsDashboard layoutId="colemak" />
 
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
