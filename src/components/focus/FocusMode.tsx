@@ -104,21 +104,23 @@ export const FocusMode: React.FC<FocusModeProps> = ({
   // Render character with appropriate styling
   const renderCharacter = (char: string, index: number) => {
     let className = 'focus-char';
-    
+
     if (index < currentIndex) {
       // Already typed
       className = cn(className, errors[index] ? 'focus-char-incorrect' : 'focus-char-correct');
     } else if (index === currentIndex) {
-      // Current character
+      // Current character - this is what user needs to type next
       className = cn(className, 'focus-char-current focus-cursor');
     } else {
       // Future characters
       className = cn(className, 'focus-char-pending');
     }
 
+    const displayChar = char === ' ' ? '\u00A0' : char;
+
     return (
       <span key={index} className={className}>
-        {char === ' ' ? '\u00A0' : char}
+        {displayChar}
       </span>
     );
   };
