@@ -591,37 +591,53 @@ All colors MUST be HSL.
   /* Focus mode typing area */
   .focus-mode .focus-typing-area {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     background: transparent;
     border: none;
     box-shadow: none;
-    padding: 2rem;
+    padding: 3rem 2rem;
   }
 
   /* Focus mode text */
   .focus-mode .focus-text {
-    font-size: 1.5rem;
-    line-height: 2;
+    font-size: 2.5rem;
+    line-height: 1.8;
     text-align: center;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     color: var(--focus-text);
+    font-weight: 500;
   }
 
   /* Large text variant */
   .focus-mode-large-text .focus-text {
-    font-size: 2rem;
-    line-height: 2.5;
+    font-size: 3.5rem;
+    line-height: 2;
+    letter-spacing: 0.15em;
   }
 
-  /* Focus mode cursor */
+  /* Focus mode cursor - using underscore under the current character */
   .focus-mode .focus-cursor {
-    background: var(--focus-text);
-    animation: focus-blink 1s infinite;
+    position: relative;
+    background: transparent;
+    /* Make sure the character itself doesn't blink */
   }
 
-  @keyframes focus-blink {
+  .focus-mode .focus-cursor::after {
+    content: '_';
+    position: absolute;
+    bottom: -0.3em;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--focus-text);
+    font-weight: bold;
+    font-size: 1.2em;
+    animation: focus-underscore-blink 1s infinite;
+    z-index: 1;
+  }
+
+  @keyframes focus-underscore-blink {
     0%, 50% { opacity: 1; }
     51%, 100% { opacity: 0; }
   }
@@ -691,9 +707,9 @@ All colors MUST be HSL.
     scroll-behavior: auto !important;
   }
 
-  /* Exception for focus cursor blink */
-  .focus-mode-no-animations .focus-cursor {
-    animation: focus-blink 1s infinite !important;
+  /* Exception for focus cursor underscore blink */
+  .focus-mode-no-animations .focus-cursor::after {
+    animation: focus-underscore-blink 1s infinite !important;
   }
 
   /* Hide elements in focus mode */
@@ -703,34 +719,51 @@ All colors MUST be HSL.
 
   /* Minimal UI adjustments */
   .focus-mode-minimal .focus-typing-area {
-    padding: 1rem;
+    padding: 2rem 1rem;
   }
 
   .focus-mode-minimal .focus-text {
-    font-size: 1.25rem;
-    line-height: 1.8;
+    font-size: 2rem;
+    line-height: 1.6;
+    letter-spacing: 0.08em;
   }
 
   /* Focus mode character states */
+  .focus-mode .focus-char {
+    display: inline-block;
+    position: relative;
+    padding: 0.1em 0.05em;
+  }
+
   .focus-mode .focus-char-correct {
     color: #22c55e;
     background: transparent;
+    font-weight: 600;
   }
 
   .focus-mode .focus-char-incorrect {
     color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.15);
+    border-radius: 0.2em;
+    font-weight: 600;
   }
 
   .focus-mode .focus-char-current {
-    background: var(--focus-text);
-    color: var(--focus-bg);
+    color: var(--focus-text);
+    background: transparent;
     position: relative;
+    font-weight: 700;
+    /* Slightly highlight the current character */
+    text-shadow: 0 0 2px var(--focus-text);
+    /* Ensure the character itself never blinks */
+    animation: none !important;
+    opacity: 1 !important;
   }
 
   .focus-mode .focus-char-pending {
     color: var(--focus-muted);
-    opacity: 0.7;
+    opacity: 0.6;
+    font-weight: 400;
   }
 
   /* Focus mode responsive */
@@ -740,13 +773,15 @@ All colors MUST be HSL.
     }
 
     .focus-mode .focus-text {
-      font-size: 1.125rem;
+      font-size: 1.75rem;
       line-height: 1.6;
+      letter-spacing: 0.08em;
     }
 
     .focus-mode-large-text .focus-text {
-      font-size: 1.5rem;
-      line-height: 2;
+      font-size: 2.5rem;
+      line-height: 1.8;
+      letter-spacing: 0.12em;
     }
 
     .focus-mode .focus-exit-button {
