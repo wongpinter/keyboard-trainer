@@ -13,6 +13,7 @@ import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard
 import { LetterAnalyticsDashboard } from '@/components/analytics/LetterAnalyticsDashboard';
 import { AdaptiveTrainingComponent } from '@/components/training/AdaptiveTrainingComponent';
 import { useStatistics } from '@/hooks/useStatistics';
+import { useCurriculums, useUserStatistics, useTypingSessions, useAuth } from '@/hooks/useDatabase';
 import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target, Brain, Zap } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
@@ -27,6 +28,11 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Database hooks for real data
+  const { curriculums } = useCurriculums();
+  const { statistics } = useUserStatistics(user?.id || '');
+  const { sessions } = useTypingSessions(user?.id || '', { limit: 10 });
+
   const {
     loadLetterAnalytics,
     generateAdaptiveTraining,
@@ -34,34 +40,7 @@ const Dashboard = () => {
     adaptiveTraining
   } = useStatistics();
 
-  // Mock sessions for demonstration
-  const mockSessions = [
-    {
-      id: 'mock-session-1',
-      userId: user?.id || 'mock-user',
-      layoutId: 'colemak',
-      startTime: new Date(Date.now() - 86400000),
-      endTime: new Date(Date.now() - 86400000 + 300000),
-      duration: 300,
-      textLength: 100,
-      wpm: 25,
-      accuracy: 88,
-      correctCharacters: 88,
-      incorrectCharacters: 12,
-      totalCharacters: 100,
-      errorRate: 12,
-      consistency: 75,
-      keystrokes: [
-        { key: 'a', timestamp: 1000, isCorrect: true, timeSinceLastKey: 200, expectedKey: 'a', finger: 3 },
-        { key: 's', timestamp: 1200, isCorrect: true, timeSinceLastKey: 200, expectedKey: 's', finger: 2 },
-        { key: 'd', timestamp: 1400, isCorrect: false, timeSinceLastKey: 200, expectedKey: 'f', finger: 1 },
-      ],
-      mistakes: [
-        { expectedKey: 'f', actualKey: 'd', position: 2, timestamp: 1400, finger: 1, frequency: 1 }
-      ],
-      createdAt: new Date(Date.now() - 86400000)
-    }
-  ];
+
 
   useEffect(() => {
     // Set up auth state listener
@@ -214,14 +193,14 @@ const Dashboard = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Active Curriculums
+                      Available Curriculums
                     </CardTitle>
                     <Target className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">3</div>
+                    <div className="text-2xl font-bold">{curriculums.length}</div>
                     <p className="text-xs text-muted-foreground">
-                      +1 from last week
+                      Training programs
                     </p>
                   </CardContent>
                 </Card>
@@ -233,9 +212,9 @@ const Dashboard = () => {
                     <Trophy className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{Math.round(statistics?.bestWpm || 0)}</div>
                     <p className="text-xs text-muted-foreground">
-                      +5 from last session
+                      Personal best
                     </p>
                   </CardContent>
                 </Card>
@@ -247,23 +226,26 @@ const Dashboard = () => {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">12h</div>
+                    <div className="text-2xl font-bold">
+                      {statistics?.totalPracticeTime ?
+                        Math.round(statistics.totalPracticeTime / 3600) + 'h' : '0h'}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      This week
+                      Total practice
                     </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Accuracy
+                      Best Accuracy
                     </CardTitle>
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">94%</div>
+                    <div className="text-2xl font-bold">{Math.round(statistics?.bestAccuracy || 0)}%</div>
                     <p className="text-xs text-muted-foreground">
-                      Average this week
+                      Personal best
                     </p>
                   </CardContent>
                 </Card>
@@ -274,7 +256,7 @@ const Dashboard = () => {
 
               {/* Letter Analytics Dashboard */}
               <LetterAnalyticsDashboard
-                sessions={mockSessions}
+                sessions={sessions}
                 className="mt-6"
               />
 
@@ -282,7 +264,7 @@ const Dashboard = () => {
               <AdaptiveTrainingComponent
                 userId={user?.id || 'mock-user'}
                 layoutId="colemak"
-                sessions={mockSessions}
+                sessions={sessions}
                 className="mt-6"
               />
 

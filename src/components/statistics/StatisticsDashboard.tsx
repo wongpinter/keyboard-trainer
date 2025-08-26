@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimatedContainer, AnimatedProgressBar, AnimatedCounter } from '@/components/ui/animated-components';
-import { useStatistics } from '@/hooks/useStatistics';
+import { useUserStatistics, useTypingSessions, useAuth } from '@/hooks/useDatabase';
 import { StatisticsPeriod } from '@/types/statistics';
 import { 
   TrendingUp, 
@@ -29,26 +29,77 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
   layoutId,
   className
 }) => {
-  const {
-    userProgress,
-    achievements,
-    performanceMetrics,
-    learningInsights,
-    loadUserProgress,
-    loadPerformanceMetrics,
-    loadLearningInsights,
-    isLoading,
-    error
-  } = useStatistics();
+  const { user } = useAuth();
+  const { statistics, loading: statsLoading, error: statsError } = useUserStatistics(user?.id || '');
+  const { sessions, loading: sessionsLoading, error: sessionsError } = useTypingSessions(user?.id || '', { limit: 50 });
 
   const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriod>('week');
 
-  // Load data on component mount
-  useEffect(() => {
-    loadUserProgress(layoutId);
-    loadPerformanceMetrics(layoutId, selectedPeriod);
-    loadLearningInsights(layoutId);
-  }, [layoutId, selectedPeriod, loadUserProgress, loadPerformanceMetrics, loadLearningInsights]);
+  const isLoading = statsLoading || sessionsLoading;
+  const error = statsError || sessionsError;
+
+  // Calculate derived statistics from real data
+  const userProgress = statistics ? {
+    level: Math.floor((statistics.totalSessions || 0) / 10) + 1,
+    experience: (statistics.totalSessions || 0) * 100,
+    totalSessions: statistics.totalSessions || 0,
+    totalPracticeTime: statistics.totalPracticeTime || 0,
+    averageWpm: statistics.averageWpm || 0,
+    averageAccuracy: statistics.averageAccuracy || 0
+  } : null;
+
+  const performanceMetrics = sessions.length > 0 ? {
+    period: selectedPeriod,
+    startDate: new Date(Date.now() - 30 * 86400000),
+    endDate: new Date(),
+    totalSessions: sessions.length,
+    totalPracticeTime: sessions.reduce((sum, s) => sum + (s.practice_time || 0), 0),
+    averageWpm: sessions.reduce((sum, s) => sum + s.wpm, 0) / sessions.length,
+    averageAccuracy: sessions.reduce((sum, s) => sum + s.accuracy, 0) / sessions.length,
+    wpmTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: s.wpm })),
+    accuracyTrend: sessions.slice(-10).map(s => ({ date: s.created_at, value: s.accuracy })),
+    consistencyScore: 85, // TODO: Calculate from session data
+    improvementRate: 15, // TODO: Calculate from trends
+    mostCommonMistakes: [],
+    keyPerformance: [],
+    sessionDistribution: []
+  } : null;
+
+  const learningInsights = {
+    overallProgress: userProgress ? Math.min(100, (userProgress.level - 1) * 10) : 0,
+    strengths: ['Home row keys', 'Common bigrams'],
+    weaknesses: ['Number row', 'Special characters'],
+    recommendations: ['Practice number sequences', 'Focus on punctuation'],
+    nextMilestone: 'Reach 30 WPM consistently'
+  };
+
+  // Mock achievements data - TODO: Replace with real database data
+  const achievements = [
+    {
+      id: 'first-session',
+      name: 'First Steps',
+      description: 'Complete your first typing session',
+      icon: '🎯',
+      progress: 100,
+      unlockedAt: userProgress?.totalSessions ? new Date() : null
+    },
+    {
+      id: 'speed-demon',
+      name: 'Speed Demon',
+      description: 'Reach 40 WPM',
+      icon: '⚡',
+      progress: Math.min(100, ((userProgress?.averageWpm || 0) / 40) * 100),
+      unlockedAt: (userProgress?.averageWpm || 0) >= 40 ? new Date() : null
+    },
+    {
+      id: 'accuracy-master',
+      name: 'Accuracy Master',
+      description: 'Achieve 95% accuracy',
+      icon: '🎯',
+      progress: Math.min(100, ((userProgress?.averageAccuracy || 0) / 95) * 100),
+      unlockedAt: (userProgress?.averageAccuracy || 0) >= 95 ? new Date() : null
+    }
+  ];
 
   if (isLoading) {
     return (

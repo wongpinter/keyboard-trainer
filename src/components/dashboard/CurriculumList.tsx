@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useCurriculums, useUserProgress, useAuth } from '@/hooks/useDatabase';
 import { Play, Users, Clock, Star, BookOpen } from 'lucide-react';
 
 interface Curriculum {
@@ -29,60 +30,25 @@ interface Curriculum {
 }
 
 const CurriculumList = () => {
-  const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchCurriculums();
-  }, []);
+  // Use database hooks instead of manual fetching
+  const { curriculums, loading: curriculumsLoading } = useCurriculums({ filters: { is_public: true } });
+  const { progress } = useUserProgress(user?.id || '');
 
-  const fetchCurriculums = async () => {
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
+  const loading = curriculumsLoading;
 
-      // Fetch all available curriculums with their layouts
-      const { data: curriculumsData, error: curriculumsError } = await supabase
-        .from('curriculums')
-        .select(`
-          *,
-          keyboard_layout:keyboard_layouts(name)
-        `)
-        .eq('is_public', true);
-
-      if (curriculumsError) throw curriculumsError;
-
-      // Fetch user progress for these curriculums
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.user.id);
-
-      if (progressError) throw progressError;
-
-      // Combine curriculum data with progress
-      const curriculumsWithProgress = curriculumsData?.map(curriculum => {
-        const progress = progressData?.find(p => p.curriculum_id === curriculum.id);
-        return {
-          ...curriculum,
-          lessons: Array.isArray(curriculum.lessons) ? curriculum.lessons : [],
-          progress
-        };
-      }) || [];
-
-      setCurriculums(curriculumsWithProgress as Curriculum[]);
-    } catch (error: any) {
-      toast({
-        title: "Error loading curriculums",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Combine curriculum data with progress
+  const curriculumsWithProgress = curriculums.map(curriculum => {
+    const userProgress = progress.find(p => p.curriculum_id === curriculum.id);
+    return {
+      ...curriculum,
+      lessons: Array.isArray(curriculum.lessons) ? curriculum.lessons : [],
+      progress: userProgress
+    };
+  });
 
   const startCurriculum = async (curriculumId: string) => {
     try {
@@ -179,7 +145,7 @@ const CurriculumList = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {curriculums.map((curriculum) => {
+        {curriculumsWithProgress.map((curriculum) => {
           const progressPercentage = curriculum.progress 
             ? (curriculum.progress.completed_lessons.length / curriculum.lessons.length) * 100
             : 0;
