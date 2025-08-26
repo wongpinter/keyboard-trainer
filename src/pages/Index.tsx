@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
+import { AnimatedContainer, AnimatedButton } from '@/components/ui/animated-components';
 import { Keyboard, ArrowRight, Star, Users, BookOpen, Zap } from 'lucide-react';
 
 const Index = () => {
@@ -85,44 +86,56 @@ const Index = () => {
         tabIndex={-1}
       >
         <div className="text-center space-y-8 mb-16">
-          <div className="space-y-4">
-            <Badge variant="secondary" className="mb-4">
-              <Star className="w-3 h-3 mr-1" />
-              Professional Typing Training
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              Master Alternative
-              <span className="text-primary"> Keyboard Layouts</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Learn Colemak, Dvorak, and custom layouts with structured curriculums, 
-              progress tracking, and personalized statistics.
-            </p>
-          </div>
+          <AnimatedContainer animation="fade" delay={200}>
+            <div className="space-y-4">
+              <AnimatedContainer animation="slide-up" delay={400}>
+                <Badge variant="secondary" className="mb-4 hover-lift">
+                  <Star className="w-3 h-3 mr-1" />
+                  Professional Typing Training
+                </Badge>
+              </AnimatedContainer>
+
+              <AnimatedContainer animation="slide-up" delay={600}>
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+                  Master Alternative
+                  <span className="text-primary bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"> Keyboard Layouts</span>
+                </h1>
+              </AnimatedContainer>
+
+              <AnimatedContainer animation="slide-up" delay={800}>
+                <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                  Learn Colemak, Dvorak, and custom layouts with structured curriculums,
+                  progress tracking, and personalized statistics.
+                </p>
+              </AnimatedContainer>
+            </div>
+          </AnimatedContainer>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isAuthenticated ? (
-              <>
-                <Button size="lg" onClick={() => navigate('/dashboard')}>
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Continue Learning
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('/trainer')}>
-                  Quick Practice
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button size="lg" onClick={() => navigate('/auth')}>
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Start Learning
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('/trainer')}>
-                  Try Demo
-                </Button>
-              </>
-            )}
-          </div>
+          <AnimatedContainer animation="slide-up" delay={1000}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {isAuthenticated ? (
+                <>
+                  <AnimatedButton size="lg" onClick={() => navigate('/dashboard')} className="hover-lift">
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Continue Learning
+                  </AnimatedButton>
+                  <AnimatedButton size="lg" variant="outline" onClick={() => navigate('/trainer')} className="hover-lift">
+                    Quick Practice
+                  </AnimatedButton>
+                </>
+              ) : (
+                <>
+                  <AnimatedButton size="lg" onClick={() => navigate('/auth')} className="hover-lift">
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Start Learning
+                  </AnimatedButton>
+                  <AnimatedButton size="lg" variant="outline" onClick={() => navigate('/trainer')} className="hover-lift">
+                    Try Demo
+                  </AnimatedButton>
+                </>
+              )}
+            </div>
+          </AnimatedContainer>
         </div>
 
         <div className="grid gap-8 md:grid-cols-3 mb-16">

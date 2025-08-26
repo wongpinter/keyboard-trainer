@@ -2,6 +2,7 @@ import { KeyboardLayout, KeyState } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
 import { useTheme, getThemeColors } from '@/contexts/ThemeContext';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
+import { useAnimations, pulse } from '@/hooks/useAnimations';
 import { useEffect, useRef } from 'react';
 
 interface KeyboardVisualizationProps {
@@ -18,12 +19,14 @@ const KeyboardVisualization = ({
   const { resolvedTheme } = useTheme();
   const themeColors = getThemeColors(resolvedTheme);
   const { preferences } = useAccessibility();
+  const { createAnimationConfig } = useAnimations();
   const keyboardRef = useRef<HTMLDivElement>(null);
+  const keyRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Get finger colors based on current theme
   const fingerColors = themeColors.fingerColors;
 
-  // Announce key state changes to screen readers
+  // Announce key state changes to screen readers and animate keys
   useEffect(() => {
     if (!preferences.screenReader) return;
 
@@ -38,6 +41,37 @@ const KeyboardVisualization = ({
       }
     }
   }, [keyStates, layout.keys, preferences.screenReader]);
+
+  // Animate key state changes
+  useEffect(() => {
+    keyStates.forEach(keyState => {
+      const keyElement = keyRefs.current.get(keyState.key);
+      if (keyElement) {
+        const config = createAnimationConfig({ duration: 200, easing: 'ease-out' });
+
+        switch (keyState.state) {
+          case 'correct':
+            // Pulse animation for correct keys
+            pulse(keyElement, config.duration);
+            break;
+          case 'incorrect':
+            // Shake animation for incorrect keys
+            keyElement.classList.add('animate-shake');
+            setTimeout(() => {
+              keyElement.classList.remove('animate-shake');
+            }, 500);
+            break;
+          case 'next':
+            // Gentle pulse for next key
+            keyElement.classList.add('animate-pulse-once');
+            setTimeout(() => {
+              keyElement.classList.remove('animate-pulse-once');
+            }, 600);
+            break;
+        }
+      }
+    });
+  }, [keyStates, createAnimationConfig]);
   const getKeyState = (key: string): KeyState['state'] => {
     const keyState = keyStates.find(ks => ks.key === key);
     return keyState?.state || 'idle';
@@ -73,7 +107,17 @@ const KeyboardVisualization = ({
         return (
           <div
             key={keyMapping.qwerty}
-            className={getKeyClassName(keyMapping.finger, state)}
+            ref={(el) => {
+              if (el) {
+                keyRefs.current.set(keyMapping.target, el);
+              }
+            }}
+            className={cn(
+              getKeyClassName(keyMapping.finger, state),
+              'transition-all duration-200 ease-out',
+              state === 'next' && 'animate-pulse',
+              state === 'active' && 'scale-95'
+            )}
             role="gridcell"
             aria-label={`Key ${keyMapping.target.toUpperCase()}, ${fingerName}, ${state === 'next' ? 'next to type' : state}`}
             aria-pressed={state === 'active'}

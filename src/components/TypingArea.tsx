@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { KeyboardLayout, TypingStats } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
+import { useAnimations, scaleIn } from '@/hooks/useAnimations';
 // import { validateTypingText } from '@/utils/validation';
 // import { handleValidationError } from '@/utils/errorHandler';
 
@@ -27,6 +28,8 @@ const TypingArea = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const isMountedRef = useRef(true);
   const { preferences } = useAccessibility();
+  const { createAnimationConfig } = useAnimations();
+  const completionRef = useRef<HTMLDivElement>(null);
 
   // Validate practice text on mount and when text changes
   // useEffect(() => {
@@ -88,6 +91,12 @@ const TypingArea = ({
         // Check completion
         if (currentIndex + 1 >= text.length) {
           onComplete();
+
+          // Animate completion
+          if (completionRef.current) {
+            const config = createAnimationConfig({ duration: 500, easing: 'ease-out' });
+            scaleIn(completionRef.current, config.duration);
+          }
 
           // Announce completion to screen readers
           if (preferences.screenReader) {
@@ -153,21 +162,38 @@ const TypingArea = ({
   }, []);
 
   const renderCharacter = (char: string, index: number) => {
-    let className = "font-typing text-lg";
-    
+    let className = "font-typing text-lg transition-all duration-200 ease-out";
+
     if (index < currentIndex) {
-      // Already typed
-      className = cn(className, errors[index] ? "bg-destructive/20 text-destructive" : "bg-success/20 text-success");
+      // Already typed - animate in with scale
+      const isError = errors[index];
+      className = cn(
+        className,
+        isError
+          ? "bg-destructive/20 text-destructive animate-shake"
+          : "bg-success/20 text-success animate-scale-in",
+        "transform"
+      );
     } else if (index === currentIndex) {
-      // Current character
-      className = cn(className, "bg-primary/20 animate-pulse");
+      // Current character - pulse and highlight
+      className = cn(
+        className,
+        "bg-primary/20 animate-typing-cursor border-l-2 border-primary",
+        "transform scale-110"
+      );
     } else {
-      // Future characters
-      className = cn(className, "text-muted-foreground");
+      // Future characters - subtle fade
+      className = cn(className, "text-muted-foreground opacity-60");
     }
 
     return (
-      <span key={index} className={className}>
+      <span
+        key={index}
+        className={className}
+        style={{
+          animationDelay: index < currentIndex ? `${index * 50}ms` : '0ms'
+        }}
+      >
         {char}
       </span>
     );
