@@ -200,6 +200,140 @@ export interface StatisticsRepository {
   unlockAchievement(userId: string, achievementId: string): Promise<void>;
 }
 
+// Letter-specific analytics interfaces
+export interface LetterAnalytics {
+  letter: string;
+  finger: number;
+  totalAttempts: number;
+  correctAttempts: number;
+  accuracy: number;
+  averageTime: number;
+  errorCount: number;
+  errorRate: number;
+  commonMistakes: LetterMistake[];
+  improvementTrend: number; // percentage change over time
+  difficultyScore: number; // 0-100, higher = more difficult
+  practiceRecommendation: 'high' | 'medium' | 'low';
+}
+
+export interface LetterMistake {
+  expectedLetter: string;
+  typedLetter: string;
+  frequency: number;
+  percentage: number;
+  lastOccurrence: Date;
+  finger: number;
+  position: 'same_finger' | 'adjacent_finger' | 'different_hand' | 'random';
+}
+
+export interface ErrorPattern {
+  id: string;
+  type: 'substitution' | 'omission' | 'insertion' | 'transposition';
+  description: string;
+  frequency: number;
+  affectedLetters: string[];
+  suggestedExercises: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+}
+
+export interface AdaptiveTraining {
+  userId: string;
+  layoutId: string;
+  generatedAt: Date;
+  focusLetters: string[];
+  errorPatterns: ErrorPattern[];
+  customExercises: CustomExercise[];
+  estimatedPracticeTime: number; // minutes
+  difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface CustomExercise {
+  id: string;
+  name: string;
+  description: string;
+  type: 'letter_drill' | 'word_practice' | 'sentence_practice' | 'pattern_practice';
+  content: string;
+  targetLetters: string[];
+  estimatedTime: number; // minutes
+  difficulty: number; // 1-10
+  repetitions: number;
+  successCriteria: {
+    minAccuracy: number;
+    minWpm: number;
+    maxErrors: number;
+  };
+}
+
+export interface LetterHeatmap {
+  letter: string;
+  finger: number;
+  row: number;
+  column: number;
+  errorIntensity: number; // 0-1, higher = more errors
+  speedIntensity: number; // 0-1, higher = slower
+  practiceNeeded: boolean;
+  color: string; // hex color for visualization
+}
+
+export interface FingerAnalytics {
+  finger: number;
+  fingerName: string;
+  hand: 'left' | 'right';
+  assignedKeys: string[];
+  totalKeystrokes: number;
+  averageAccuracy: number;
+  averageSpeed: number;
+  errorCount: number;
+  strongestKeys: string[];
+  weakestKeys: string[];
+  improvementTrend: number;
+  recommendedExercises: string[];
+}
+
+// Enhanced performance metrics with letter analytics
+export interface EnhancedPerformanceMetrics extends PerformanceMetrics {
+  letterAnalytics: LetterAnalytics[];
+  fingerAnalytics: FingerAnalytics[];
+  errorPatterns: ErrorPattern[];
+  letterHeatmap: LetterHeatmap[];
+  adaptiveTraining: AdaptiveTraining;
+  weakestLetters: string[];
+  strongestLetters: string[];
+  improvementPriority: string[];
+}
+
+// Training generation interfaces
+export interface TrainingGenerator {
+  generateAdaptiveTraining(
+    userId: string,
+    layoutId: string,
+    sessions: TypingSession[]
+  ): Promise<AdaptiveTraining>;
+
+  generateLetterDrills(
+    targetLetters: string[],
+    difficulty: 'beginner' | 'intermediate' | 'advanced'
+  ): CustomExercise[];
+
+  generateWordPractice(
+    targetLetters: string[],
+    wordCount: number
+  ): CustomExercise;
+
+  generateSentencePractice(
+    targetLetters: string[],
+    sentenceCount: number
+  ): CustomExercise;
+
+  analyzeErrorPatterns(mistakes: MistakeData[]): ErrorPattern[];
+
+  calculateLetterDifficulty(
+    letter: string,
+    sessions: TypingSession[]
+  ): number;
+}
+
 // Export utility types
 export type StatisticsPeriod = 'day' | 'week' | 'month' | 'year' | 'all';
 export type AchievementCategory = 'speed' | 'accuracy' | 'consistency' | 'milestone' | 'streak';
@@ -207,3 +341,7 @@ export type RecommendationType = 'lesson' | 'practice' | 'technique' | 'break';
 export type FocusAreaCategory = 'speed' | 'accuracy' | 'consistency' | 'specific_keys' | 'finger_strength';
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 export type Priority = 'low' | 'medium' | 'high';
+export type ExerciseType = 'letter_drill' | 'word_practice' | 'sentence_practice' | 'pattern_practice';
+export type ErrorType = 'substitution' | 'omission' | 'insertion' | 'transposition';
+export type Hand = 'left' | 'right';
+export type MistakePosition = 'same_finger' | 'adjacent_finger' | 'different_hand' | 'random';

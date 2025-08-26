@@ -9,7 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
 import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard';
-import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target } from 'lucide-react';
+import { LetterAnalyticsDashboard } from '@/components/analytics/LetterAnalyticsDashboard';
+import { AdaptiveTrainingComponent } from '@/components/training/AdaptiveTrainingComponent';
+import { useStatistics } from '@/hooks/useStatistics';
+import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target, Brain, Zap } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
 import LayoutBuilder from './LayoutBuilder';
@@ -21,6 +24,43 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const {
+    loadLetterAnalytics,
+    generateAdaptiveTraining,
+    letterAnalytics,
+    adaptiveTraining
+  } = useStatistics();
+
+  // Mock sessions for demonstration
+  const mockSessions = [
+    {
+      id: 'mock-session-1',
+      userId: user?.id || 'mock-user',
+      layoutId: 'colemak',
+      startTime: new Date(Date.now() - 86400000),
+      endTime: new Date(Date.now() - 86400000 + 300000),
+      duration: 300,
+      textLength: 100,
+      wpm: 25,
+      accuracy: 88,
+      correctCharacters: 88,
+      incorrectCharacters: 12,
+      totalCharacters: 100,
+      errorRate: 12,
+      consistency: 75,
+      keystrokes: [
+        { key: 'a', timestamp: 1000, isCorrect: true, timeSinceLastKey: 200, expectedKey: 'a', finger: 3 },
+        { key: 's', timestamp: 1200, isCorrect: true, timeSinceLastKey: 200, expectedKey: 's', finger: 2 },
+        { key: 'd', timestamp: 1400, isCorrect: false, timeSinceLastKey: 200, expectedKey: 'f', finger: 1 },
+      ],
+      mistakes: [
+        { expectedKey: 'f', actualKey: 'd', position: 2, timestamp: 1400, finger: 1, frequency: 1 }
+      ],
+      createdAt: new Date(Date.now() - 86400000)
+    }
+  ];
 
   useEffect(() => {
     // Set up auth state listener
@@ -228,6 +268,20 @@ const Dashboard = () => {
 
               {/* Statistics Dashboard */}
               <StatisticsDashboard layoutId="colemak" />
+
+              {/* Letter Analytics Dashboard */}
+              <LetterAnalyticsDashboard
+                sessions={mockSessions}
+                className="mt-6"
+              />
+
+              {/* Adaptive Training */}
+              <AdaptiveTrainingComponent
+                userId={user?.id || 'mock-user'}
+                layoutId="colemak"
+                sessions={mockSessions}
+                className="mt-6"
+              />
 
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
