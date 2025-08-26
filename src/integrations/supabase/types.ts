@@ -14,7 +14,231 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      curriculums: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty_level: number
+          estimated_hours: number | null
+          id: string
+          is_public: boolean
+          keyboard_layout_id: string
+          lessons: Json
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: number
+          estimated_hours?: number | null
+          id?: string
+          is_public?: boolean
+          keyboard_layout_id: string
+          lessons: Json
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: number
+          estimated_hours?: number | null
+          id?: string
+          is_public?: boolean
+          keyboard_layout_id?: string
+          lessons?: Json
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curriculums_keyboard_layout_id_fkey"
+            columns: ["keyboard_layout_id"]
+            isOneToOne: false
+            referencedRelation: "keyboard_layouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      keyboard_layouts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean
+          layout_data: Json
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          layout_data: Json
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          layout_data?: Json
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      typing_sessions: {
+        Row: {
+          accuracy: number
+          completed: boolean
+          correct_characters: number
+          created_at: string
+          curriculum_id: string | null
+          id: string
+          incorrect_characters: number
+          lesson_index: number | null
+          practice_time: number
+          total_characters: number
+          user_id: string
+          wpm: number
+        }
+        Insert: {
+          accuracy: number
+          completed?: boolean
+          correct_characters: number
+          created_at?: string
+          curriculum_id?: string | null
+          id?: string
+          incorrect_characters: number
+          lesson_index?: number | null
+          practice_time: number
+          total_characters: number
+          user_id: string
+          wpm: number
+        }
+        Update: {
+          accuracy?: number
+          completed?: boolean
+          correct_characters?: number
+          created_at?: string
+          curriculum_id?: string | null
+          id?: string
+          incorrect_characters?: number
+          lesson_index?: number | null
+          practice_time?: number
+          total_characters?: number
+          user_id?: string
+          wpm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "typing_sessions_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "curriculums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_progress: {
+        Row: {
+          best_accuracy: number | null
+          best_wpm: number | null
+          completed_at: string | null
+          completed_lessons: number[] | null
+          created_at: string
+          current_lesson_attempts: number
+          curriculum_id: string
+          id: string
+          last_practiced_at: string | null
+          lesson_index: number
+          mastery_level: number | null
+          total_practice_time: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_accuracy?: number | null
+          best_wpm?: number | null
+          completed_at?: string | null
+          completed_lessons?: number[] | null
+          created_at?: string
+          current_lesson_attempts?: number
+          curriculum_id: string
+          id?: string
+          last_practiced_at?: string | null
+          lesson_index?: number
+          mastery_level?: number | null
+          total_practice_time?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_accuracy?: number | null
+          best_wpm?: number | null
+          completed_at?: string | null
+          completed_lessons?: number[] | null
+          created_at?: string
+          current_lesson_attempts?: number
+          curriculum_id?: string
+          id?: string
+          last_practiced_at?: string | null
+          lesson_index?: number
+          mastery_level?: number | null
+          total_practice_time?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "curriculums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
