@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Save, Trash2, Edit, Eye, Code } from 'lucide-react';
 import { KeyboardLayout } from '@/types/keyboard';
+// import { validateRequired, validateLength, validateKeyboardLayout } from '@/utils/validation';
+// import { handleValidationError, handleAPIError } from '@/utils/errorHandler';
 
 interface StoredLayout {
   id: string;
@@ -106,13 +108,33 @@ const LayoutBuilder = () => {
     setLayoutData(JSON.stringify(layout.layout_data, null, 2));
   };
 
-  const handleSave = async () => {
+  const validateLayoutForm = (): boolean => {
+    // Simplified validation
     if (!layoutName.trim()) {
       toast({
         title: "Validation Error",
         description: "Layout name is required",
         variant: "destructive",
       });
+      return false;
+    }
+
+    try {
+      JSON.parse(layoutData);
+    } catch (error) {
+      toast({
+        title: "Invalid JSON",
+        description: "Please check your layout data JSON format",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateLayoutForm()) {
       return;
     }
 

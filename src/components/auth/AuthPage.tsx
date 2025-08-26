@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Keyboard, User, Mail, Lock } from 'lucide-react';
+// import { handleAuthError, handleValidationError } from '@/utils/errorHandler';
+// import { ValidationError } from '@/types/errors';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
@@ -29,13 +31,50 @@ const AuthPage = () => {
     checkUser();
   }, [navigate]);
 
+  const validateSignUpForm = (): boolean => {
+    // Temporarily simplified validation
+    if (!email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!username.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Username is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!password.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Password is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateSignUpForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
-      
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -71,8 +110,36 @@ const AuthPage = () => {
     }
   };
 
+  const validateSignInForm = (): boolean => {
+    // Simplified validation
+    if (!email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!password.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Password is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateSignInForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
