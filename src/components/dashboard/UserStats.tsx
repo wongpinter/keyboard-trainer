@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useUserStatistics, useTypingSessions, useUserProgress } from '@/hooks/useDatabase';
 import { BarChart3, TrendingUp, Clock, Target, Calendar, Award } from 'lucide-react';
 
 interface UserStatsProps {
@@ -33,72 +33,26 @@ interface ProgressSummary {
 }
 
 const UserStats = ({ userId }: UserStatsProps) => {
-  const [sessions, setSessions] = useState<TypingSession[]>([]);
-  const [stats, setStats] = useState<ProgressSummary | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchUserStats();
-  }, [userId]);
+  // Use database hooks instead of manual fetching
+  const { statistics, loading: statsLoading } = useUserStatistics(userId);
+  const { sessions, loading: sessionsLoading } = useTypingSessions(userId, { limit: 20 });
+  const { progress, loading: progressLoading } = useUserProgress(userId);
 
-  const fetchUserStats = async () => {
-    try {
-      // Fetch recent typing sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('typing_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+  const loading = statsLoading || sessionsLoading || progressLoading;
 
-      if (sessionsError) throw sessionsError;
-
-      // Fetch user progress summary
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (progressError) throw progressError;
-
-      setSessions(sessionsData || []);
-
-      // Calculate summary statistics
-      if (sessionsData && sessionsData.length > 0) {
-        const summary: ProgressSummary = {
-          total_sessions: sessionsData.length,
-          total_practice_time: sessionsData.reduce((sum, session) => sum + session.practice_time, 0),
-          best_wpm: Math.max(...sessionsData.map(s => s.wpm)),
-          average_wpm: sessionsData.reduce((sum, session) => sum + session.wpm, 0) / sessionsData.length,
-          best_accuracy: Math.max(...sessionsData.map(s => s.accuracy)),
-          average_accuracy: sessionsData.reduce((sum, session) => sum + session.accuracy, 0) / sessionsData.length,
-          active_curriculums: progressData?.length || 0,
-          completed_lessons: progressData?.reduce((sum, progress) => sum + progress.completed_lessons.length, 0) || 0
-        };
-        setStats(summary);
-      } else {
-        setStats({
-          total_sessions: 0,
-          total_practice_time: 0,
-          best_wpm: 0,
-          average_wpm: 0,
-          best_accuracy: 0,
-          average_accuracy: 0,
-          active_curriculums: progressData?.length || 0,
-          completed_lessons: 0
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error loading statistics",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Calculate summary statistics from database hooks
+  const stats: ProgressSummary | null = statistics ? {
+    total_sessions: statistics.totalSessions,
+    total_practice_time: statistics.totalPracticeTime,
+    best_wpm: statistics.bestWpm,
+    average_wpm: statistics.averageWpm,
+    best_accuracy: statistics.bestAccuracy,
+    average_accuracy: statistics.averageAccuracy,
+    active_curriculums: progress.length,
+    completed_lessons: progress.reduce((sum, p) => sum + (p.completed_lessons?.length || 0), 0)
+  } : null;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -260,11 +214,11 @@ const UserStats = ({ userId }: UserStatsProps) => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`text-sm font-medium ${getPerformanceColor(session.wpm)}`}>
-                          {Math.round(session.wpm)} WPM
+                        <div className={`text-sm font-medium ${getPerformanceColor(parseFloat(session.wpm.toString()))}`}>
+                          {Math.round(parseFloat(session.wpm.toString()))} WPM
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {Math.round(session.accuracy)}% accuracy
+                          {Math.round(parseFloat(session.accuracy.toString()))}% accuracy
                         </div>
                       </div>
                     </div>

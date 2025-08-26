@@ -12,7 +12,8 @@ import {
   UserStatistics,
   ProgressAnalytics,
   DatabaseService,
-  DatabaseError
+  DatabaseError,
+  TrainingLessonDB
 } from '@/types/database';
 
 class SupabaseDatabaseService implements DatabaseService {
@@ -67,9 +68,9 @@ class SupabaseDatabaseService implements DatabaseService {
 
       // Apply filters
       if (options.filters) {
-        Object.entries(options.filters).forEach(([key, value]) => {
-          query = query.eq(key, value);
-        });
+        for (const [key, value] of Object.entries(options.filters)) {
+          query = (query as any).eq(key, value);
+        }
       }
 
       // Apply ordering
@@ -92,7 +93,7 @@ class SupabaseDatabaseService implements DatabaseService {
       // Transform the data to match our extended type
       const transformedData = (data || []).map(curriculum => ({
         ...curriculum,
-        lessons: Array.isArray(curriculum.lessons) ? curriculum.lessons : []
+        lessons: Array.isArray(curriculum.lessons) ? curriculum.lessons as unknown as TrainingLessonDB[] : []
       })) as ExtendedCurriculum[];
 
       return { data: transformedData, error: null };
@@ -114,7 +115,7 @@ class SupabaseDatabaseService implements DatabaseService {
 
       const transformedData = {
         ...data,
-        lessons: Array.isArray(data.lessons) ? data.lessons : []
+        lessons: Array.isArray(data.lessons) ? data.lessons as unknown as TrainingLessonDB[] : []
       } as ExtendedCurriculum;
 
       return { data: transformedData, error: null };
@@ -260,27 +261,27 @@ class SupabaseDatabaseService implements DatabaseService {
         return { data: emptyStats, error: null };
       }
 
-      // Calculate statistics
+      // Calculate statistics (convert string numbers to actual numbers)
       const totalSessions = sessions.length;
       const totalPracticeTime = sessions.reduce((sum, s) => sum + s.practice_time, 0);
       const totalCharacters = sessions.reduce((sum, s) => sum + s.total_characters, 0);
       const totalCorrectCharacters = sessions.reduce((sum, s) => sum + s.correct_characters, 0);
       const totalIncorrectCharacters = sessions.reduce((sum, s) => sum + s.incorrect_characters, 0);
-      
-      const averageWpm = sessions.reduce((sum, s) => sum + s.wpm, 0) / totalSessions;
-      const averageAccuracy = sessions.reduce((sum, s) => sum + s.accuracy, 0) / totalSessions;
-      const bestWpm = Math.max(...sessions.map(s => s.wpm));
-      const bestAccuracy = Math.max(...sessions.map(s => s.accuracy));
+
+      const averageWpm = sessions.reduce((sum, s) => sum + parseFloat(s.wpm.toString()), 0) / totalSessions;
+      const averageAccuracy = sessions.reduce((sum, s) => sum + parseFloat(s.accuracy.toString()), 0) / totalSessions;
+      const bestWpm = Math.max(...sessions.map(s => parseFloat(s.wpm.toString())));
+      const bestAccuracy = Math.max(...sessions.map(s => parseFloat(s.accuracy.toString())));
       
       const lastActiveDate = sessions[0]?.created_at || new Date().toISOString();
 
       // Calculate improvement rate (simplified)
-      const improvementRate = sessions.length > 1 ? 
-        (sessions[0].wpm - sessions[sessions.length - 1].wpm) / sessions.length : 0;
+      const improvementRate = sessions.length > 1 ?
+        (parseFloat(sessions[0].wpm.toString()) - parseFloat(sessions[sessions.length - 1].wpm.toString())) / sessions.length : 0;
 
       // Calculate consistency score (simplified)
-      const wpmVariance = sessions.reduce((sum, s) => sum + Math.pow(s.wpm - averageWpm, 2), 0) / totalSessions;
-      const consistencyScore = Math.max(0, 100 - (wpmVariance / averageWpm) * 100);
+      const wpmVariance = sessions.reduce((sum, s) => sum + Math.pow(parseFloat(s.wpm.toString()) - averageWpm, 2), 0) / totalSessions;
+      const consistencyScore = averageWpm > 0 ? Math.max(0, 100 - (wpmVariance / averageWpm) * 100) : 0;
 
       const statistics: UserStatistics = {
         totalSessions,
@@ -302,7 +303,7 @@ class SupabaseDatabaseService implements DatabaseService {
     });
   }
 
-  async getProgressAnalytics(userId: string, timeframe = '30d'): Promise<DatabaseResponse<ProgressAnalytics>> {
+  async getProgressAnalytics(userId: string, _timeframe = '30d'): Promise<DatabaseResponse<ProgressAnalytics>> {
     return this.executeQuery(async () => {
       // This is a simplified implementation
       // In a real app, you'd want more sophisticated analytics

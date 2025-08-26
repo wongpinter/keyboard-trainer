@@ -99,8 +99,10 @@ export const LessonSelector: React.FC<LessonSelectorProps> = ({
   };
 
   const renderLessonCard = (lesson: TrainingLessonDB) => {
-    const progress = userProgress[lesson.id];
-    const isCompleted = progress?.completed || false;
+    // Find progress for this curriculum and check if lesson is completed
+    const curriculumProgress = progress.find(p => p.curriculum_id === mainCurriculum?.id);
+    const lessonIndex = allLessons.findIndex(l => l.id === lesson.id);
+    const isCompleted = curriculumProgress?.completed_lessons?.includes(lessonIndex) || false;
     const isCurrent = currentLessonId === lesson.id;
     
     return (
@@ -172,14 +174,14 @@ export const LessonSelector: React.FC<LessonSelectorProps> = ({
             )}
 
             {/* Progress */}
-            {progress && (
+            {curriculumProgress && (
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
                   <span>Best Performance</span>
-                  <span>{progress.bestWpm} WPM • {progress.bestAccuracy}%</span>
+                  <span>{curriculumProgress.best_wpm || 0} WPM • {curriculumProgress.best_accuracy || 0}%</span>
                 </div>
-                <Progress 
-                  value={Math.min(100, (progress.bestWpm / lesson.minWpm) * 100)} 
+                <Progress
+                  value={Math.min(100, ((curriculumProgress.best_wpm || 0) / lesson.minWpm) * 100)}
                   className="h-2"
                 />
               </div>
