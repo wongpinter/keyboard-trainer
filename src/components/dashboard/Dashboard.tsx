@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
 import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
@@ -108,7 +109,19 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Skip Links */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <a href="#navigation" className="skip-link">
+        Skip to navigation
+      </a>
+
+      <header
+        id="navigation"
+        className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        role="banner"
+      >
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -120,6 +133,7 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground">
               Welcome, {profile?.display_name || profile?.username || user.email}
             </span>
+            <AccessibilitySettings />
             <ThemeToggle />
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -129,7 +143,12 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container py-8">
+      <main
+        id="main-content"
+        className="container py-8"
+        role="main"
+        tabIndex={-1}
+      >
         <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>

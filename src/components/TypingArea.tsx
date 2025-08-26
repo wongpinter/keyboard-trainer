@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { KeyboardLayout, TypingStats } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
+import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
 // import { validateTypingText } from '@/utils/validation';
 // import { handleValidationError } from '@/utils/errorHandler';
 
@@ -25,6 +26,7 @@ const TypingArea = ({
   const [startTime, setStartTime] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMountedRef = useRef(true);
+  const { preferences } = useAccessibility();
 
   // Validate practice text on mount and when text changes
   // useEffect(() => {
@@ -86,6 +88,15 @@ const TypingArea = ({
         // Check completion
         if (currentIndex + 1 >= text.length) {
           onComplete();
+
+          // Announce completion to screen readers
+          if (preferences.screenReader) {
+            const finalStats = calculateStats(typedText + typedChar, errors.concat(!isCorrect));
+            announceToScreenReader(
+              `Typing exercise completed! ${finalStats.wpm} words per minute, ${finalStats.accuracy}% accuracy`,
+              'assertive'
+            );
+          }
         }
       }
     };
@@ -164,9 +175,19 @@ const TypingArea = ({
 
   return (
     <div className="space-y-4">
-      <div 
+      <div
         className="p-6 bg-card rounded-lg border-2 border-dashed border-muted-foreground/20 min-h-[100px] flex items-center cursor-text focus-within:border-primary/50 transition-colors"
         onClick={() => inputRef.current?.focus()}
+        role="textbox"
+        aria-label="Typing practice area"
+        aria-describedby="typing-instructions typing-progress"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          // Ensure focus is on the hidden input for proper key handling
+          if (e.target !== inputRef.current) {
+            inputRef.current?.focus();
+          }
+        }}
       >
         <div className="w-full leading-relaxed text-lg">
           {text.split('').map((char, index) => renderCharacter(char, index))}
@@ -179,11 +200,28 @@ const TypingArea = ({
         className="sr-only"
         autoFocus
         onBlur={handleInputBlur}
+        aria-label="Typing input (hidden)"
+        aria-describedby="typing-instructions"
       />
 
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
+      {/* Screen reader instructions */}
+      <div id="typing-instructions" className="sr-only">
+        Type the text shown above. Correct characters are highlighted in green,
+        incorrect characters in red. Your current position is marked with a cursor.
+        Press any key to start typing.
+      </div>
+
+      <div
+        id="typing-progress"
+        className="flex justify-between items-center text-sm text-muted-foreground"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <div>
           {currentIndex}/{text.length} characters
+          <span className="sr-only">
+            , {Math.round((currentIndex / text.length) * 100)}% complete
+          </span>
         </div>
         <div>
           Press ESC to reset

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
 import { Keyboard, ArrowRight, Star, Users, BookOpen, Zap } from 'lucide-react';
 
 const Index = () => {
@@ -38,13 +39,26 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Skip Links */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <a href="#navigation" className="skip-link">
+        Skip to navigation
+      </a>
+
+      <header
+        id="navigation"
+        className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        role="banner"
+      >
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-2">
             <Keyboard className="w-8 h-8 text-primary" />
             <span className="text-xl font-bold">Keyboard Trainer</span>
           </div>
           <div className="flex items-center space-x-4">
+            <AccessibilitySettings />
             <ThemeToggle />
             {isAuthenticated ? (
               <Button onClick={() => navigate('/dashboard')}>
@@ -64,7 +78,12 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container py-16">
+      <main
+        id="main-content"
+        className="container py-16"
+        role="main"
+        tabIndex={-1}
+      >
         <div className="text-center space-y-8 mb-16">
           <div className="space-y-4">
             <Badge variant="secondary" className="mb-4">
