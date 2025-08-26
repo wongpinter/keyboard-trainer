@@ -71,6 +71,19 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+// Cleanup function to clear all timeouts
+const clearAllTimeouts = () => {
+  toastTimeouts.forEach((timeout) => {
+    clearTimeout(timeout)
+  })
+  toastTimeouts.clear()
+}
+
+// Clear timeouts when the page is about to unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', clearAllTimeouts)
+}
+
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -179,7 +192,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, []) // Remove state dependency to prevent re-running on every state change
 
   return {
     ...state,

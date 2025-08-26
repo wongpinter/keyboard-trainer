@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { KeyboardLayout, TypingStats } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
+// import { validateTypingText } from '@/utils/validation';
+// import { handleValidationError } from '@/utils/errorHandler';
 
 interface TypingAreaProps {
   text: string;
@@ -22,6 +24,17 @@ const TypingArea = ({
   const [errors, setErrors] = useState<boolean[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
+
+  // Validate practice text on mount and when text changes
+  // useEffect(() => {
+  //   if (text) {
+  //     const validation = validateTypingText(text);
+  //     if (!validation.isValid) {
+  //       handleValidationError(new Error(validation.errors[0]), 'practiceText');
+  //     }
+  //   }
+  // }, [text]);
 
   // Convert QWERTY input to target layout
   const convertKey = (qwertyKey: string): string => {
@@ -78,8 +91,18 @@ const TypingArea = ({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      isMountedRef.current = false;
+    };
   }, [currentIndex, text, typedText, errors, startTime, layout, onKeyPress, onStatsUpdate, onComplete]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const calculateStats = (typed: string, errorList: boolean[]): TypingStats => {
     const totalChars = typed.length;
@@ -110,6 +133,13 @@ const TypingArea = ({
     setErrors([]);
     setStartTime(null);
   };
+
+  // Safe focus handler that checks if component is still mounted
+  const handleInputBlur = useCallback(() => {
+    if (isMountedRef.current && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const renderCharacter = (char: string, index: number) => {
     let className = "font-typing text-lg";
@@ -148,7 +178,7 @@ const TypingArea = ({
         ref={inputRef}
         className="sr-only"
         autoFocus
-        onBlur={() => inputRef.current?.focus()}
+        onBlur={handleInputBlur}
       />
 
       <div className="flex justify-between items-center text-sm text-muted-foreground">
