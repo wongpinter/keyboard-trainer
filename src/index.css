@@ -551,4 +551,247 @@ All colors MUST be HSL.
   .stagger-8 { animation-delay: 0.8s; }
   .stagger-9 { animation-delay: 0.9s; }
   .stagger-10 { animation-delay: 1s; }
+
+  /* Focus Mode Styles */
+
+  /* Base focus mode */
+  .focus-mode {
+    --focus-bg: hsl(var(--background));
+    --focus-text: hsl(var(--foreground));
+    --focus-muted: hsl(var(--muted-foreground));
+    --focus-border: hsl(var(--border));
+  }
+
+  /* Dark background variant */
+  .focus-mode-dark {
+    --focus-bg: #0a0a0a;
+    --focus-text: #f5f5f5;
+    --focus-muted: #a1a1aa;
+    --focus-border: #27272a;
+  }
+
+  /* Focus mode container */
+  .focus-mode .focus-mode-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--focus-bg);
+    color: var(--focus-text);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow: hidden;
+  }
+
+  /* Focus mode typing area */
+  .focus-mode .focus-typing-area {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 2rem;
+  }
+
+  /* Focus mode text */
+  .focus-mode .focus-text {
+    font-size: 1.5rem;
+    line-height: 2;
+    text-align: center;
+    letter-spacing: 0.05em;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    color: var(--focus-text);
+  }
+
+  /* Large text variant */
+  .focus-mode-large-text .focus-text {
+    font-size: 2rem;
+    line-height: 2.5;
+  }
+
+  /* Focus mode cursor */
+  .focus-mode .focus-cursor {
+    background: var(--focus-text);
+    animation: focus-blink 1s infinite;
+  }
+
+  @keyframes focus-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Focus mode exit button */
+  .focus-mode .focus-exit-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: var(--focus-text);
+    color: var(--focus-bg);
+    border: 2px solid var(--focus-text);
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10000;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .focus-mode .focus-exit-button:hover {
+    background: transparent;
+    color: var(--focus-text);
+    transform: scale(1.1);
+  }
+
+  /* Focus mode progress indicator */
+  .focus-mode .focus-progress {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--focus-muted);
+    font-size: 0.875rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .focus-mode .focus-progress-bar {
+    width: 200px;
+    height: 4px;
+    background: var(--focus-border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .focus-mode .focus-progress-fill {
+    height: 100%;
+    background: var(--focus-text);
+    transition: width 0.3s ease;
+  }
+
+  /* Disable animations in focus mode */
+  .focus-mode-no-animations *,
+  .focus-mode-no-animations *::before,
+  .focus-mode-no-animations *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exception for focus cursor blink */
+  .focus-mode-no-animations .focus-cursor {
+    animation: focus-blink 1s infinite !important;
+  }
+
+  /* Hide elements in focus mode */
+  .focus-mode .focus-hide {
+    display: none !important;
+  }
+
+  /* Minimal UI adjustments */
+  .focus-mode-minimal .focus-typing-area {
+    padding: 1rem;
+  }
+
+  .focus-mode-minimal .focus-text {
+    font-size: 1.25rem;
+    line-height: 1.8;
+  }
+
+  /* Focus mode character states */
+  .focus-mode .focus-char-correct {
+    color: #22c55e;
+    background: transparent;
+  }
+
+  .focus-mode .focus-char-incorrect {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .focus-mode .focus-char-current {
+    background: var(--focus-text);
+    color: var(--focus-bg);
+    position: relative;
+  }
+
+  .focus-mode .focus-char-pending {
+    color: var(--focus-muted);
+    opacity: 0.7;
+  }
+
+  /* Focus mode responsive */
+  @media (max-width: 768px) {
+    .focus-mode .focus-mode-container {
+      padding: 1rem;
+    }
+
+    .focus-mode .focus-text {
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+
+    .focus-mode-large-text .focus-text {
+      font-size: 1.5rem;
+      line-height: 2;
+    }
+
+    .focus-mode .focus-exit-button {
+      top: 1rem;
+      right: 1rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      font-size: 1rem;
+    }
+
+    .focus-mode .focus-progress {
+      bottom: 1rem;
+      font-size: 0.75rem;
+    }
+
+    .focus-mode .focus-progress-bar {
+      width: 150px;
+      height: 3px;
+    }
+  }
+
+  /* Focus mode accessibility */
+  .focus-mode .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Focus mode smooth transitions for non-animation elements */
+  .focus-mode .focus-smooth {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  /* Focus mode zen styling */
+  .focus-mode .focus-zen {
+    background: linear-gradient(135deg, var(--focus-bg) 0%, var(--focus-bg) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AccessibilitySettings } from '@/components/ui/accessibility-settings';
+import { FocusModeToggle } from '@/components/ui/focus-mode-toggle';
 import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard';
 import { LetterAnalyticsDashboard } from '@/components/analytics/LetterAnalyticsDashboard';
 import { AdaptiveTrainingComponent } from '@/components/training/AdaptiveTrainingComponent';
@@ -174,6 +175,7 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground">
               Welcome, {profile?.display_name || profile?.username || user.email}
             </span>
+            <FocusModeToggle />
             <AccessibilitySettings />
             <ThemeToggle />
             <Button variant="outline" size="sm" onClick={handleSignOut}>

@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
 import { useAnimations, scaleIn } from '@/hooks/useAnimations';
 import { useStatistics } from '@/hooks/useStatistics';
+import { useFocusMode } from '@/contexts/FocusModeContext';
+import FocusMode from '@/components/focus/FocusMode';
 // import { validateTypingText } from '@/utils/validation';
 // import { handleValidationError } from '@/utils/errorHandler';
 
@@ -37,6 +39,7 @@ const TypingArea = ({
     endSession,
     isSessionActive
   } = useStatistics();
+  const { isFocusMode } = useFocusMode();
   const completionRef = useRef<HTMLDivElement>(null);
   const lastKeystrokeTime = useRef<number>(Date.now());
 
@@ -244,7 +247,18 @@ const TypingArea = ({
   };
 
   return (
-    <div className="space-y-4">
+    <>
+      {/* Focus Mode Overlay */}
+      {isFocusMode && (
+        <FocusMode
+          text={text}
+          onComplete={onComplete}
+          onKeyPress={onKeyPress}
+        />
+      )}
+
+      {/* Regular Typing Area */}
+      <div className="space-y-4">
       <div
         className="p-6 bg-card rounded-lg border-2 border-dashed border-muted-foreground/20 min-h-[100px] flex items-center cursor-text focus-within:border-primary/50 transition-colors"
         onClick={() => inputRef.current?.focus()}
@@ -298,6 +312,7 @@ const TypingArea = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 
