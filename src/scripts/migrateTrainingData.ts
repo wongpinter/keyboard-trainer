@@ -42,7 +42,7 @@ function generateLessonTags(lesson: any): string[] {
 }
 
 // Create comprehensive Colemak curriculum
-async function createColemakCurriculum(keyboardLayoutId: string): Promise<CurriculumInsert> {
+async function createColemakCurriculum(keyboardLayoutId: string, userId: string): Promise<CurriculumInsert> {
   const lessons = colemakCurriculum.lessons.map(convertLessonToDBFormat);
 
   return {
@@ -52,14 +52,15 @@ async function createColemakCurriculum(keyboardLayoutId: string): Promise<Curric
     lessons: lessons as any, // Cast to any for JSON compatibility
     difficulty_level: 3, // Intermediate to advanced
     estimated_hours: 40,
-    is_public: true
+    is_public: true,
+    created_by: userId
   };
 }
 
 // Create specialized curriculums for different training types
-async function createSpecializedCurriculums(keyboardLayoutId: string): Promise<CurriculumInsert[]> {
+async function createSpecializedCurriculums(keyboardLayoutId: string, userId: string): Promise<CurriculumInsert[]> {
   const allLessons = colemakCurriculum.lessons.map(convertLessonToDBFormat);
-  
+
   return [
     // Beginner curriculum
     {
@@ -69,7 +70,8 @@ async function createSpecializedCurriculums(keyboardLayoutId: string): Promise<C
       lessons: allLessons.filter(l => l.difficulty === 'beginner') as any,
       difficulty_level: 1,
       estimated_hours: 15,
-      is_public: true
+      is_public: true,
+      created_by: userId
     },
 
     // Bigram training curriculum
@@ -80,7 +82,8 @@ async function createSpecializedCurriculums(keyboardLayoutId: string): Promise<C
       lessons: allLessons.filter(l => l.type === 'words' && l.id.includes('bigram')) as any,
       difficulty_level: 2,
       estimated_hours: 10,
-      is_public: true
+      is_public: true,
+      created_by: userId
     },
 
     // Colemak-DH curriculum
@@ -91,7 +94,8 @@ async function createSpecializedCurriculums(keyboardLayoutId: string): Promise<C
       lessons: allLessons.filter(l => l.id.includes('dh')) as any,
       difficulty_level: 3,
       estimated_hours: 20,
-      is_public: true
+      is_public: true,
+      created_by: userId
     },
 
     // Advanced curriculum
@@ -102,24 +106,25 @@ async function createSpecializedCurriculums(keyboardLayoutId: string): Promise<C
       lessons: allLessons.filter(l => l.difficulty === 'advanced') as any,
       difficulty_level: 4,
       estimated_hours: 25,
-      is_public: true
+      is_public: true,
+      created_by: userId
     }
   ];
 }
 
 // Ensure Colemak layout exists in database
-async function ensureColemakLayout(): Promise<string> {
+async function ensureColemakLayout(userId: string): Promise<string> {
   // Check if Colemak layout already exists
   const { data: existingLayout } = await supabase
     .from('keyboard_layouts')
     .select('id')
     .eq('name', 'Colemak')
     .single();
-  
+
   if (existingLayout) {
     return existingLayout.id;
   }
-  
+
   // Create Colemak layout if it doesn't exist
   const { data: newLayout, error } = await supabase
     .from('keyboard_layouts')
@@ -127,15 +132,16 @@ async function ensureColemakLayout(): Promise<string> {
       name: 'Colemak',
       description: 'The efficient Colemak keyboard layout designed for comfortable and fast typing',
       layout_data: COLEMAK_LAYOUT as any, // Cast to any for JSON compatibility
-      is_public: true
+      is_public: true,
+      created_by: userId
     })
     .select('id')
     .single();
-  
+
   if (error) {
     throw new Error(`Failed to create Colemak layout: ${error.message}`);
   }
-  
+
   return newLayout.id;
 }
 
@@ -147,21 +153,30 @@ export async function migrateTrainingData(options: MigrationOptions = {}): Promi
     errors: [],
     warnings: []
   };
-  
+
   try {
     console.log('Starting training data migration...');
-    
+
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      result.errors.push('Migration requires authentication. Please sign in first.');
+      return result;
+    }
+
+    console.log(`Running migration as user: ${user.email}`);
+
     if (options.dryRun) {
       console.log('DRY RUN MODE - No data will be written to database');
     }
-    
+
     // Ensure we have a Colemak layout
-    const keyboardLayoutId = await ensureColemakLayout();
+    const keyboardLayoutId = await ensureColemakLayout(user.id);
     console.log(`Using keyboard layout ID: ${keyboardLayoutId}`);
     
     // Create main curriculum
-    const mainCurriculum = await createColemakCurriculum(keyboardLayoutId);
-    
+    const mainCurriculum = await createColemakCurriculum(keyboardLayoutId, user.id);
+
     if (options.validateOnly) {
       console.log('Validation complete - curriculum structure is valid');
       result.success = true;
@@ -208,7 +223,7 @@ export async function migrateTrainingData(options: MigrationOptions = {}): Promi
       }
       
       // Create specialized curriculums
-      const specializedCurriculums = await createSpecializedCurriculums(keyboardLayoutId);
+      const specializedCurriculums = await createSpecializedCurriculums(keyboardLayoutId, user.id);
       
       for (const curriculum of specializedCurriculums) {
         try {
@@ -254,7 +269,7 @@ export async function migrateTrainingData(options: MigrationOptions = {}): Promi
     } else {
       console.log('DRY RUN: Would create/update the following curriculums:');
       console.log('- ' + mainCurriculum.name);
-      const specialized = await createSpecializedCurriculums(keyboardLayoutId);
+      const specialized = await createSpecializedCurriculums(keyboardLayoutId, user.id);
       specialized.forEach(c => console.log('- ' + c.name));
       result.migratedCount = 1 + specialized.length;
     }

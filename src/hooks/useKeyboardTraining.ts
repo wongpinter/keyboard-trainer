@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { KeyboardLayout, KeyState, TypingStats, LessonProgress } from '@/types/keyboard';
-import { TrainingLesson, generatePracticeText, colemakCurriculum } from '@/data/colemakTraining';
+import { TrainingLesson, generatePracticeText } from '@/data/colemakTraining';
+import { useCurriculums, useUserProgress, useTypingSessions, useAuth } from '@/hooks/useDatabase';
+import { ExtendedCurriculum, TrainingLessonDB } from '@/types/database';
 
 export interface TrainingSession {
   currentLesson: number;
@@ -9,33 +11,38 @@ export interface TrainingSession {
   practiceText: string;
   keyStates: KeyState[];
   stats: TypingStats;
-  selectedLesson?: TrainingLesson;
+  selectedLesson?: TrainingLessonDB;
+  selectedCurriculum?: ExtendedCurriculum;
   lessonProgress: Record<string, { completed: boolean; bestWpm: number; bestAccuracy: number }>;
 }
 
 export const useKeyboardTraining = (layout: KeyboardLayout) => {
-  const [session, setSession] = useState<TrainingSession>(() => {
-    const firstLesson = colemakCurriculum.lessons[0];
+  const { user } = useAuth();
+  const { curriculums, loading: curriculumsLoading } = useCurriculums();
+  const { progress, updateProgress } = useUserProgress(user?.id || '');
+  const { createSession } = useTypingSessions(user?.id || '');
 
-    return {
-      currentLesson: 0,
-      currentStage: 0,
-      activeKeys: firstLesson.focusKeys.length > 0 ? firstLesson.focusKeys : layout.learningOrder[0] || [],
-      practiceText: '', // Will be set in useEffect
-      keyStates: [],
-      stats: {
-        wpm: 0,
-        accuracy: 0,
-        totalCharacters: 0,
-        correctCharacters: 0,
-        incorrectCharacters: 0
-      },
-      selectedLesson: firstLesson,
-      lessonProgress: {}
-    };
-  });
+  // Get the main Colemak curriculum
+  const mainCurriculum = curriculums.find(c => c.name === 'Complete Colemak Training');
+  const firstLesson = mainCurriculum?.lessons?.[0];
 
-  const [progress, setProgress] = useState<LessonProgress[]>([]);
+  const [session, setSession] = useState<TrainingSession>(() => ({
+    currentLesson: 0,
+    currentStage: 0,
+    activeKeys: firstLesson?.focusKeys?.length > 0 ? firstLesson.focusKeys : layout.learningOrder[0] || [],
+    practiceText: '', // Will be set in useEffect
+    keyStates: [],
+    stats: {
+      wpm: 0,
+      accuracy: 0,
+      totalCharacters: 0,
+      correctCharacters: 0,
+      incorrectCharacters: 0
+    },
+    selectedLesson: firstLesson,
+    selectedCurriculum: mainCurriculum,
+    lessonProgress: {}
+  }));
 
   // Initialize practice text after component mounts
   useEffect(() => {
@@ -48,8 +55,23 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     }
   }, [session.selectedLesson, session.practiceText]);
 
-  // Select a specific lesson
-  const selectLesson = useCallback((lesson: TrainingLesson) => {
+  // Update session when curriculum loads
+  useEffect(() => {
+    if (mainCurriculum && !session.selectedCurriculum) {
+      const firstLesson = mainCurriculum.lessons?.[0];
+      if (firstLesson) {
+        setSession(prev => ({
+          ...prev,
+          selectedLesson: firstLesson,
+          selectedCurriculum: mainCurriculum,
+          activeKeys: firstLesson.focusKeys?.length > 0 ? firstLesson.focusKeys : layout.learningOrder[0] || []
+        }));
+      }
+    }
+  }, [mainCurriculum, session.selectedCurriculum, layout.learningOrder]);
+
+  // Select a specific lesson from database
+  const selectLesson = useCallback((lesson: TrainingLessonDB) => {
     const newPracticeText = generatePracticeText(lesson, 100);
 
     setSession(prev => ({
@@ -194,35 +216,47 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     }));
   }, []);
 
-  // Complete current lesson
-  const completeLesson = useCallback(() => {
-    const lessonId = `lesson-${session.currentLesson}`;
-    const currentProgress = progress.find(p => p.lessonId === lessonId);
-    
-    const newProgress: LessonProgress = {
-      lessonId,
-      completed: true,
-      bestWpm: Math.max(currentProgress?.bestWpm || 0, session.stats.wpm),
-      bestAccuracy: Math.max(currentProgress?.bestAccuracy || 0, session.stats.accuracy),
-      attempts: (currentProgress?.attempts || 0) + 1,
-      masteryLevel: Math.min(100, ((session.stats.wpm / 30) * 50) + ((session.stats.accuracy / 100) * 50))
-    };
+  // Complete current lesson and save to database
+  const completeLesson = useCallback(async () => {
+    if (!user || !session.selectedLesson || !session.selectedCurriculum) return;
 
-    setProgress(prev => {
-      const existing = prev.findIndex(p => p.lessonId === lessonId);
-      if (existing >= 0) {
-        const updated = [...prev];
-        updated[existing] = newProgress;
-        return updated;
-      }
-      return [...prev, newProgress];
-    });
+    try {
+      // Save typing session to database
+      // Find the lesson index in the curriculum
+      const lessonIndex = session.selectedCurriculum.lessons.findIndex(l => l.id === session.selectedLesson.id);
 
-    // Auto-advance to next lesson if mastery level is sufficient
-    if (newProgress.masteryLevel >= 70 && session.currentLesson < layout.learningOrder.length - 1) {
-      setTimeout(() => startLesson(session.currentLesson + 1), 1000);
+      await createSession({
+        user_id: user.id,
+        curriculum_id: session.selectedCurriculum.id,
+        lesson_index: lessonIndex >= 0 ? lessonIndex : 0,
+        wpm: session.stats.wpm,
+        accuracy: session.stats.accuracy,
+        total_characters: session.stats.totalCharacters,
+        correct_characters: session.stats.correctCharacters,
+        incorrect_characters: session.stats.incorrectCharacters,
+        practice_time: Math.floor((session.stats.endTime || Date.now() - (session.stats.startTime || Date.now())) / 1000),
+        completed: session.stats.accuracy >= session.selectedLesson.minAccuracy && session.stats.wpm >= session.selectedLesson.minWpm
+      });
+
+      // Update user progress
+      const masteryLevel = Math.min(100, ((session.stats.wpm / session.selectedLesson.minWpm) * 50) + ((session.stats.accuracy / 100) * 50));
+      const isCompleted = session.stats.accuracy >= session.selectedLesson.minAccuracy && session.stats.wpm >= session.selectedLesson.minWpm;
+
+      await updateProgress(session.selectedCurriculum.id, {
+        lesson_index: lessonIndex >= 0 ? lessonIndex : 0,
+        completed_lessons: isCompleted ? [lessonIndex] : [],
+        best_wpm: session.stats.wpm,
+        best_accuracy: session.stats.accuracy,
+        mastery_level: masteryLevel,
+        total_practice_time: Math.floor((session.stats.endTime || Date.now() - (session.stats.startTime || Date.now())) / 1000),
+        last_practiced_at: new Date().toISOString(),
+        completed_at: isCompleted ? new Date().toISOString() : null
+      });
+
+    } catch (error) {
+      console.error('Failed to save lesson completion:', error);
     }
-  }, [session, progress, layout.learningOrder.length, startLesson]);
+  }, [user, session, createSession, updateProgress]);
 
   // Restart current lesson
   const restartLesson = useCallback(() => {
@@ -234,8 +268,12 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     startLesson(0);
   }, [startLesson]);
 
-  const currentLessonProgress = progress.find(p => p.lessonId === `lesson-${session.currentLesson}`);
-  const overallProgress = (session.currentLesson / layout.learningOrder.length) * 100;
+  // Get current lesson progress from database
+  const currentLessonProgress = session.selectedLesson && session.selectedCurriculum ?
+    progress.find(p => p.curriculum_id === session.selectedCurriculum.id) : null;
+
+  const overallProgress = session.selectedCurriculum ?
+    (progress.filter(p => p.completed_at !== null).length / session.selectedCurriculum.lessons.length) * 100 : 0;
 
   return {
     session,
@@ -248,10 +286,14 @@ export const useKeyboardTraining = (layout: KeyboardLayout) => {
     updateStats,
     completeLesson,
     availableLessons: layout.learningOrder.length,
-    // New lesson system functions
+    // Database-driven lesson system
     selectLesson,
     updateLessonProgress,
     generateNewPracticeText,
-    colemakLessons: colemakCurriculum.lessons
+    curriculums,
+    curriculumsLoading,
+    mainCurriculum,
+    // Legacy compatibility
+    colemakLessons: mainCurriculum?.lessons || []
   };
 };

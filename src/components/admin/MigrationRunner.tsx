@@ -140,6 +140,19 @@ export const MigrationRunner: React.FC = () => {
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
+            <strong>Requirements:</strong>
+            <ul className="mt-2 ml-4 list-disc space-y-1">
+              <li>You must be signed in to run the migration</li>
+              <li>Migration creates public curriculums accessible to all users</li>
+              <li>Will create 5 comprehensive training curriculums</li>
+              <li>Includes 40+ lessons with progressive difficulty</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
             <strong>Migration will create:</strong>
             <ul className="mt-2 ml-4 list-disc space-y-1">
               <li>Complete Colemak Training curriculum (40+ lessons)</li>

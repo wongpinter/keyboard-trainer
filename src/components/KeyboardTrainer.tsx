@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { COLEMAK_LAYOUT } from '@/types/keyboard';
 import { useKeyboardTraining } from '@/hooks/useKeyboardTraining';
+import { useAuth } from '@/hooks/useDatabase';
 import KeyboardVisualization from './KeyboardVisualization';
 import TypingArea from './TypingArea';
 import ProgressTracker from './ProgressTracker';
@@ -10,13 +11,17 @@ import { LessonSelector } from './training/LessonSelector';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RotateCcw, SkipForward, BookOpen, List } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RotateCcw, SkipForward, BookOpen, List, User, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const KeyboardTrainer = () => {
   const [showFingerGuide, setShowFingerGuide] = useState(true);
   const [showLessonSelector, setShowLessonSelector] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   const {
     session,
@@ -32,8 +37,54 @@ const KeyboardTrainer = () => {
     selectLesson,
     updateLessonProgress,
     generateNewPracticeText,
-    colemakLessons
+    colemakLessons,
+    curriculumsLoading,
+    mainCurriculum
   } = useKeyboardTraining(COLEMAK_LAYOUT);
+
+  // Show loading state
+  if (authLoading || curriculumsLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading training system...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication prompt for guest users
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <Card className="p-8 text-center max-w-md">
+              <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-2xl font-bold mb-4">Sign In to Start Training</h2>
+              <p className="text-muted-foreground mb-6">
+                Sign in to track your progress, save your sessions, and access personalized training.
+              </p>
+              <Button onClick={() => navigate('/auth')} className="w-full">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+              <Alert className="mt-4">
+                <AlertDescription>
+                  Your progress and statistics will be saved to your account.
+                </AlertDescription>
+              </Alert>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLessonComplete = () => {
     completeLesson();
@@ -176,7 +227,7 @@ const KeyboardTrainer = () => {
               stats={session.stats}
               targetWpm={30}
               targetAccuracy={95}
-              lessonProgress={currentLessonProgress?.masteryLevel || 0}
+              lessonProgress={currentLessonProgress?.mastery_level || 0}
             />
           </div>
         </div>
@@ -186,9 +237,10 @@ const KeyboardTrainer = () => {
           <h3 className="text-lg font-semibold mb-3">Available Lessons</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
             {COLEMAK_LAYOUT.learningOrder.map((keys, index) => {
-              const lessonProgress = progress.find(p => p.lessonId === `lesson-${index}`);
+              // Check if this lesson index is in the completed_lessons array
+              const curriculumProgress = progress.find(p => p.curriculum_id === session.selectedCurriculum?.id);
+              const isCompleted = curriculumProgress?.completed_lessons?.includes(index) || false;
               const isActive = index === session.currentLesson;
-              const isCompleted = lessonProgress?.completed;
               
               return (
                 <Button
@@ -203,9 +255,9 @@ const KeyboardTrainer = () => {
                     <div className="text-xs opacity-75">
                       {keys.join('').toUpperCase()}
                     </div>
-                    {lessonProgress && (
+                    {curriculumProgress && isCompleted && (
                       <div className="text-xs">
-                        {Math.round(lessonProgress.masteryLevel)}%
+                        {Math.round(curriculumProgress.mastery_level || 0)}%
                       </div>
                     )}
                   </div>

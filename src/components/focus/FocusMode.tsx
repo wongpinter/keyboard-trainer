@@ -3,9 +3,11 @@ import { X, Eye, Settings } from 'lucide-react';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useAccessibility } from '@/hooks/useAccessibility';
 import { cn } from '@/lib/utils';
+import { KeyboardLayout } from '@/types/keyboard';
 
 interface FocusModeProps {
   text: string;
+  layout: KeyboardLayout;
   onComplete?: () => void;
   onKeyPress?: (expectedChar: string, isCorrect: boolean) => void;
   className?: string;
@@ -13,18 +15,25 @@ interface FocusModeProps {
 
 export const FocusMode: React.FC<FocusModeProps> = ({
   text,
+  layout,
   onComplete,
   onKeyPress,
   className
 }) => {
   const { isFocusMode, settings, exitFocusMode } = useFocusMode();
   const { preferences } = useAccessibility();
-  
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [errors, setErrors] = useState<boolean[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Convert QWERTY input to target layout (same as TypingArea)
+  const convertKey = (qwertyKey: string): string => {
+    const mapping = layout.keys.find(k => k.qwerty.toLowerCase() === qwertyKey.toLowerCase());
+    return mapping?.target || qwertyKey;
+  };
 
   // Focus input when focus mode is activated
   useEffect(() => {
@@ -61,7 +70,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
     // Only process printable characters
     if (e.key.length === 1) {
       const expectedChar = text[currentIndex];
-      const typedChar = e.key;
+      const typedChar = convertKey(e.key); // Convert QWERTY to target layout
       const isCorrect = typedChar === expectedChar;
 
       // Start timing on first keystroke
