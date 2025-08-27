@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FocusModeProvider } from "./contexts/FocusModeContext";
+import { EmulationProvider } from "./contexts/EmulationContext";
 import Index from "./pages/Index";
 import Statistics from "./pages/Statistics";
 import AuthPage from "./components/auth/AuthPage";
@@ -25,7 +26,8 @@ const App = () => (
   <ErrorBoundary>
     <ThemeProvider defaultTheme="system">
       <FocusModeProvider>
-        <QueryClientProvider client={queryClient}>
+        <EmulationProvider>
+          <QueryClientProvider client={queryClient}>
           <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -46,6 +48,7 @@ const App = () => (
           </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>
+        </EmulationProvider>
       </FocusModeProvider>
     </ThemeProvider>
   </ErrorBoundary>

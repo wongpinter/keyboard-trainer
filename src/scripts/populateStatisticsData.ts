@@ -1,10 +1,25 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Populate database with sample statistics data for better analytics
+ * ⚠️ DEVELOPMENT ONLY - Populate database with sample statistics data for better analytics
+ *
+ * WARNING: This script generates FAKE/MOCK data for development and testing purposes.
+ * DO NOT use in production! This will create artificial statistics that do not reflect real user performance.
+ *
+ * Use this script only for:
+ * - Development testing
+ * - UI/UX design validation
+ * - Analytics dashboard development
  */
 export async function populateStatisticsData(userId: string) {
-  console.log('🎯 Populating statistics data for user:', userId);
+  // Prevent accidental use in production
+  if (import.meta.env.PROD) {
+    console.error('❌ populateStatisticsData cannot be used in production!');
+    throw new Error('Sample data generation is not allowed in production environment');
+  }
+
+  console.warn('⚠️ GENERATING FAKE DATA - Development only!');
+  console.log('🎯 Populating sample statistics data for user:', userId);
 
   try {
     // 1. Create sample daily statistics for the last 30 days

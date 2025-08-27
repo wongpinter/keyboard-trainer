@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-// import { useAuth } from '@/contexts/AuthContext'; // TODO: Implement auth context
+import { useAuth } from '@/hooks/useDatabase';
+import { databaseService } from '@/services/database';
+import { supabase } from '@/integrations/supabase/client';
 import {
   TypingSession,
   UserProgress,
@@ -19,55 +21,7 @@ import { statisticsCalculator } from '@/utils/statisticsCalculator';
 import { letterAnalyticsCalculator } from '@/utils/letterAnalytics';
 import { adaptiveTrainingGenerator } from '@/utils/adaptiveTraining';
 
-// Mock data for development - replace with actual API calls
-const MOCK_ACHIEVEMENTS: Achievement[] = [
-  {
-    id: 'first_session',
-    name: 'First Steps',
-    description: 'Complete your first typing session',
-    icon: '🎯',
-    category: 'milestone',
-    requirement: { type: 'sessions', value: 1 },
-    progress: 100,
-    unlockedAt: new Date()
-  },
-  {
-    id: 'speed_demon_30',
-    name: 'Speed Demon',
-    description: 'Reach 30 WPM',
-    icon: '⚡',
-    category: 'speed',
-    requirement: { type: 'wpm', value: 30, condition: 'greater_than' },
-    progress: 75
-  },
-  {
-    id: 'accuracy_master_95',
-    name: 'Accuracy Master',
-    description: 'Achieve 95% accuracy',
-    icon: '🎯',
-    category: 'accuracy',
-    requirement: { type: 'accuracy', value: 95, condition: 'greater_than' },
-    progress: 60
-  },
-  {
-    id: 'consistent_performer',
-    name: 'Consistent Performer',
-    description: 'Maintain consistent typing for 10 sessions',
-    icon: '📊',
-    category: 'consistency',
-    requirement: { type: 'sessions', value: 10 },
-    progress: 40
-  },
-  {
-    id: 'week_streak',
-    name: 'Week Warrior',
-    description: 'Practice for 7 consecutive days',
-    icon: '🔥',
-    category: 'streak',
-    requirement: { type: 'streak', value: 7 },
-    progress: 30
-  }
-];
+// Real data from database - no more mock data
 
 interface UseStatisticsReturn {
   // Current session data
@@ -115,14 +69,14 @@ interface UseStatisticsReturn {
 }
 
 export const useStatistics = (): UseStatisticsReturn => {
-  // Mock user for development - replace with actual auth
-  const user = { id: 'mock-user-id', email: 'user@example.com' };
+  // Use real auth instead of mock user
+  const { user } = useAuth();
   
   // State management
   const [currentSession, setCurrentSession] = useState<TypingSession | null>(null);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
-  const [achievements, setAchievements] = useState<Achievement[]>(MOCK_ACHIEVEMENTS);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [learningInsights, setLearningInsights] = useState<LearningInsights | null>(null);
   const [letterAnalytics, setLetterAnalytics] = useState<LetterAnalytics[]>([]);
@@ -237,15 +191,34 @@ export const useStatistics = (): UseStatisticsReturn => {
     setIsSessionActive(false);
 
     try {
-      // In a real app, save to database
-      console.log('Session completed:', finalSession);
-      
+      // Save session to database
+      if (user?.id) {
+        const sessionData = {
+          user_id: user.id,
+          curriculum_id: finalSession.curriculumId || '',
+          lesson_index: finalSession.lessonIndex || 0,
+          wpm: finalSession.wpm,
+          accuracy: finalSession.accuracy,
+          total_characters: finalSession.totalCharacters,
+          correct_characters: finalSession.correctCharacters,
+          incorrect_characters: finalSession.incorrectCharacters,
+          practice_time: Math.round(finalSession.duration),
+          completed: true
+        };
+
+        const result = await databaseService.createSession(sessionData);
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        console.log('Session saved to database:', result.data);
+      }
+
       // Update user progress
       await updateUserProgressAfterSession(finalSession);
-      
-      // Check for new achievements
-      checkForNewAchievements(finalSession);
-      
+
+      // Check for new achievements will be handled automatically by the database hooks
+
     } catch (err) {
       setError('Failed to save session data');
       console.error('Error saving session:', err);
@@ -317,146 +290,223 @@ export const useStatistics = (): UseStatisticsReturn => {
 
   // Data loading functions
   const loadUserProgress = useCallback(async (layoutId: string) => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setIsLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockProgress: UserProgress = {
+      // Get real user statistics from database
+      const statsResult = await databaseService.getUserStatistics(user.id);
+      if (statsResult.error) {
+        throw new Error(statsResult.error);
+      }
+
+      const stats = statsResult.data;
+      if (!stats) {
+        setUserProgress(null);
+        return;
+      }
+
+      // Convert database statistics to UserProgress format
+      const progress: UserProgress = {
         userId: user.id,
         layoutId,
-        level: 5,
-        experience: 1250,
-        totalSessions: 25,
-        totalPracticeTime: 7200, // 2 hours
-        averageWpm: 28,
-        averageAccuracy: 92,
-        bestWpm: 35,
-        bestAccuracy: 98,
-        currentStreak: 3,
-        longestStreak: 7,
-        lessonsCompleted: ['lesson1', 'lesson2', 'lesson3'],
-        achievements: [],
-        weakKeys: ['q', 'z', 'x'],
-        strongKeys: ['a', 's', 'd', 'f'],
-        lastSessionDate: new Date(Date.now() - 86400000), // Yesterday
-        createdAt: new Date(Date.now() - 30 * 86400000), // 30 days ago
+        level: Math.floor((stats.totalSessions || 0) / 5) + 1, // Level up every 5 sessions
+        experience: (stats.totalSessions || 0) * 50 + (stats.totalPracticeTime || 0) / 60, // XP from sessions + minutes
+        totalSessions: stats.totalSessions || 0,
+        totalPracticeTime: stats.totalPracticeTime || 0,
+        averageWpm: stats.averageWpm || 0,
+        averageAccuracy: stats.averageAccuracy || 0,
+        bestWpm: stats.bestWpm || 0,
+        bestAccuracy: stats.bestAccuracy || 0,
+        currentStreak: stats.streakDays || 0,
+        longestStreak: await databaseService.calculateLongestStreak(user.id),
+        lessonsCompleted: await getLessonsCompleted(user.id),
+        achievements: [], // Will be loaded separately
+        weakKeys: calculateWeakKeys(letterAnalytics),
+        strongKeys: calculateStrongKeys(letterAnalytics),
+        lastSessionDate: new Date(stats.lastActiveDate),
+        createdAt: new Date(stats.firstSessionDate || Date.now()),
         updatedAt: new Date()
       };
 
-      setUserProgress(mockProgress);
+      setUserProgress(progress);
     } catch (err) {
       setError('Failed to load user progress');
+      console.error('Error loading user progress:', err);
     } finally {
       setIsLoading(false);
     }
   }, [user]);
 
   const loadPerformanceMetrics = useCallback(async (layoutId: string, period: StatisticsPeriod) => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setIsLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockMetrics: PerformanceMetrics = {
+      // Get real performance analytics from database
+      const analyticsResult = await databaseService.getProgressAnalytics(user.id, period);
+      if (analyticsResult.error) {
+        throw new Error(analyticsResult.error);
+      }
+
+      const analytics = analyticsResult.data;
+      if (!analytics) {
+        setPerformanceMetrics(null);
+        return;
+      }
+
+      // Calculate date range based on period
+      const endDate = new Date();
+      let startDate = new Date();
+      switch (period) {
+        case 'day':
+          startDate.setDate(endDate.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(endDate.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(endDate.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+        default:
+          startDate.setDate(endDate.getDate() - 30);
+      }
+
+      // Convert analytics to PerformanceMetrics format
+      const metrics: PerformanceMetrics = {
         period,
-        startDate: new Date(Date.now() - 30 * 86400000),
-        endDate: new Date(),
-        totalSessions: 25,
-        totalPracticeTime: 7200,
-        averageWpm: 28,
-        averageAccuracy: 92,
-        wpmTrend: [],
-        accuracyTrend: [],
-        consistencyScore: 85,
-        improvementRate: 15,
-        mostCommonMistakes: [],
-        keyPerformance: [],
-        sessionDistribution: []
+        startDate,
+        endDate,
+        totalSessions: analytics.wpmHistory?.length || 0,
+        totalPracticeTime: await calculateTotalPracticeTime(user.id),
+        averageWpm: analytics.wpmHistory?.reduce((sum, h) => sum + h.wpm, 0) / (analytics.wpmHistory?.length || 1) || 0,
+        averageAccuracy: analytics.wpmHistory?.reduce((sum, h) => sum + h.accuracy, 0) / (analytics.wpmHistory?.length || 1) || 0,
+        wpmTrend: analytics.wpmHistory || [],
+        accuracyTrend: analytics.wpmHistory?.map(h => ({ date: h.date, accuracy: h.accuracy })) || [],
+        consistencyScore: calculateConsistencyScore(analytics.wpmHistory || []),
+        improvementRate: calculateImprovementRate(analytics.wpmHistory || []),
+        mostCommonMistakes: await getMostCommonMistakes(user.id),
+        keyPerformance: letterAnalytics.slice(0, 10), // Top 10 letter performance
+        sessionDistribution: await calculateSessionDistribution(user.id)
       };
 
-      setPerformanceMetrics(mockMetrics);
+      setPerformanceMetrics(metrics);
     } catch (err) {
       setError('Failed to load performance metrics');
+      console.error('Error loading performance metrics:', err);
     } finally {
       setIsLoading(false);
     }
   }, [user]);
 
   const loadLearningInsights = useCallback(async (layoutId: string) => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setIsLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockInsights: LearningInsights = {
-        userId: user.id,
-        layoutId,
-        overallProgress: 65,
-        currentLevel: 5,
-        nextMilestone: {
+      // Get real user statistics for insights
+      const statsResult = await databaseService.getUserStatistics(user.id);
+      if (statsResult.error) {
+        throw new Error(statsResult.error);
+      }
+
+      const stats = statsResult.data;
+      if (!stats) {
+        setLearningInsights(null);
+        return;
+      }
+
+      // Calculate learning insights from real data
+      const currentLevel = Math.floor((stats.totalSessions || 0) / 10) + 1;
+      const overallProgress = Math.min(100, ((stats.averageWpm || 0) / 60) * 100);
+
+      // Determine next milestone based on current WPM
+      let nextMilestone;
+      if (stats.averageWpm < 20) {
+        nextMilestone = {
+          id: 'milestone_20wpm',
+          name: '20 WPM Milestone',
+          description: 'Reach 20 words per minute consistently',
+          targetWpm: 20,
+          targetAccuracy: 85,
+          requiredLessons: [],
+          estimatedTime: 5,
+          progress: Math.min(100, (stats.averageWpm / 20) * 100)
+        };
+      } else if (stats.averageWpm < 30) {
+        nextMilestone = {
           id: 'milestone_30wpm',
           name: '30 WPM Milestone',
           description: 'Reach 30 words per minute consistently',
           targetWpm: 30,
           targetAccuracy: 90,
           requiredLessons: [],
-          estimatedTime: 10,
-          progress: 75
-        },
-        strengths: ['Home row keys', 'Common words', 'Consistent rhythm'],
-        weaknesses: ['Number row', 'Special characters', 'Less common letters'],
-        recommendations: [],
-        learningVelocity: 2.5,
-        practiceConsistency: 80,
+          estimatedTime: 8,
+          progress: Math.min(100, ((stats.averageWpm - 20) / 10) * 100)
+        };
+      } else {
+        nextMilestone = {
+          id: 'milestone_40wpm',
+          name: '40 WPM Milestone',
+          description: 'Reach 40 words per minute consistently',
+          targetWpm: 40,
+          targetAccuracy: 95,
+          requiredLessons: [],
+          estimatedTime: 12,
+          progress: Math.min(100, ((stats.averageWpm - 30) / 10) * 100)
+        };
+      }
+
+      const insights: LearningInsights = {
+        userId: user.id,
+        layoutId,
+        overallProgress: Math.round(overallProgress),
+        currentLevel,
+        nextMilestone,
+        strengths: stats.averageAccuracy > 90 ? ['High accuracy', 'Consistent typing'] : ['Steady progress'],
+        weaknesses: stats.averageAccuracy < 85 ? ['Accuracy needs improvement'] : stats.averageWpm < 25 ? ['Speed development needed'] : [],
+        recommendations: [
+          stats.averageAccuracy < 90 ? 'Focus on accuracy before speed' : 'Continue building speed',
+          stats.totalSessions < 10 ? 'Practice regularly for better results' : 'Great consistency!'
+        ],
+        learningVelocity: Math.min(5, (stats.totalSessions || 0) / 10),
+        practiceConsistency: Math.min(100, (stats.streakDays || 0) * 20),
         focusAreas: [],
-        estimatedTimeToGoal: 14,
-        confidenceScore: 78
+        estimatedTimeToGoal: Math.max(1, Math.round((nextMilestone.targetWpm - stats.averageWpm) * 2)),
+        confidenceScore: Math.min(100, Math.round((stats.averageAccuracy + stats.averageWpm) / 2))
       };
 
-      setLearningInsights(mockInsights);
+      setLearningInsights(insights);
     } catch (err) {
       setError('Failed to load learning insights');
+      console.error('Error loading learning insights:', err);
     } finally {
       setIsLoading(false);
     }
   }, [user]);
 
   const loadLetterAnalytics = useCallback(async (layoutId: string) => {
-    if (!user) return;
+    if (!user?.id) return;
 
     setIsLoading(true);
     try {
-      // In a real app, load user sessions from database
-      // For now, use existing sessions or mock data
-      const sessions = userSessions.length > 0 ? userSessions : [
-        // Mock session data for demonstration
-        {
-          id: 'mock-session-1',
-          userId: user.id,
-          layoutId,
-          startTime: new Date(Date.now() - 86400000),
-          endTime: new Date(Date.now() - 86400000 + 300000),
-          duration: 300,
-          textLength: 100,
-          wpm: 25,
-          accuracy: 88,
-          correctCharacters: 88,
-          incorrectCharacters: 12,
-          totalCharacters: 100,
-          errorRate: 12,
-          consistency: 75,
-          keystrokes: [
-            { key: 'a', timestamp: 1000, isCorrect: true, timeSinceLastKey: 200, expectedKey: 'a', finger: 3 },
-            { key: 's', timestamp: 1200, isCorrect: true, timeSinceLastKey: 200, expectedKey: 's', finger: 2 },
-            { key: 'd', timestamp: 1400, isCorrect: false, timeSinceLastKey: 200, expectedKey: 'f', finger: 1 },
-          ],
-          mistakes: [
-            { expectedKey: 'f', actualKey: 'd', position: 2, timestamp: 1400, finger: 1, frequency: 1 }
-          ],
-          createdAt: new Date(Date.now() - 86400000)
-        } as TypingSession
-      ];
+      // Load real user sessions from database
+      const sessionsResult = await databaseService.getUserSessions(user.id, { limit: 50 });
+      if (sessionsResult.error) {
+        throw new Error(sessionsResult.error);
+      }
+
+      const sessions = sessionsResult.data || [];
+
+      // If no sessions exist, set empty analytics
+      if (sessions.length === 0) {
+        setLetterAnalytics([]);
+        setFingerAnalytics([]);
+        return;
+      }
 
       // Analyze letter performance
       const letters = letterAnalyticsCalculator.analyzeLetterPerformance(sessions);
@@ -490,8 +540,8 @@ export const useStatistics = (): UseStatisticsReturn => {
       const sessions = userSessions.length > 0 ? userSessions : [];
 
       if (sessions.length === 0) {
-        // Load letter analytics first to get mock sessions
-        await loadLetterAnalytics(layoutId);
+        // No sessions available for adaptive training
+        setAdaptiveTraining(null);
         return;
       }
 
@@ -525,6 +575,148 @@ export const useStatistics = (): UseStatisticsReturn => {
       errorRate: currentSession.errorRate
     };
   }, [currentSession]);
+
+  // Helper functions for calculations
+  const calculateConsistencyScore = useCallback((wpmHistory: any[]) => {
+    if (wpmHistory.length < 2) return 0;
+
+    // Calculate coefficient of variation (CV) for WPM
+    const wpms = wpmHistory.map(h => h.wpm);
+    const mean = wpms.reduce((sum, wpm) => sum + wpm, 0) / wpms.length;
+    const variance = wpms.reduce((sum, wpm) => sum + Math.pow(wpm - mean, 2), 0) / wpms.length;
+    const standardDeviation = Math.sqrt(variance);
+    const cv = standardDeviation / mean;
+
+    // Convert CV to consistency score (lower CV = higher consistency)
+    const consistencyScore = Math.max(0, Math.min(100, 100 - (cv * 100)));
+    return Math.round(consistencyScore);
+  }, []);
+
+  const calculateImprovementRate = useCallback((wpmHistory: any[]) => {
+    if (wpmHistory.length < 2) return 0;
+
+    // Calculate linear regression slope for WPM over time
+    const n = wpmHistory.length;
+    const xSum = wpmHistory.reduce((sum, _, i) => sum + i, 0);
+    const ySum = wpmHistory.reduce((sum, h) => sum + h.wpm, 0);
+    const xySum = wpmHistory.reduce((sum, h, i) => sum + (i * h.wpm), 0);
+    const x2Sum = wpmHistory.reduce((sum, _, i) => sum + (i * i), 0);
+
+    const slope = (n * xySum - xSum * ySum) / (n * x2Sum - xSum * xSum);
+
+    // Convert slope to percentage improvement rate
+    const avgWpm = ySum / n;
+    const improvementRate = avgWpm > 0 ? (slope / avgWpm) * 100 : 0;
+    return Math.round(improvementRate * 10) / 10; // Round to 1 decimal
+  }, []);
+
+  const calculateTotalPracticeTime = useCallback(async (userId: string) => {
+    try {
+      // Get real practice time from database sessions
+      const { data: sessions, error } = await supabase
+        .from('typing_sessions')
+        .select('practice_time')
+        .eq('user_id', userId);
+
+      if (error || !sessions) return 0;
+
+      return sessions.reduce((total, session) => total + (session.practice_time || 0), 0);
+    } catch (error) {
+      console.error('Error calculating total practice time:', error);
+      return 0;
+    }
+  }, []);
+
+  const calculateWeakKeys = useCallback((analytics: LetterAnalytics[]) => {
+    if (!analytics || analytics.length === 0) return [];
+
+    // Find keys with accuracy below 80% or speed below average
+    const avgSpeed = analytics.reduce((sum, a) => sum + a.averageSpeed, 0) / analytics.length;
+    const weakKeys = analytics
+      .filter(a => a.accuracy < 80 || a.averageSpeed < avgSpeed * 0.8)
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 5)
+      .map(a => a.letter);
+
+    return weakKeys;
+  }, []);
+
+  const calculateStrongKeys = useCallback((analytics: LetterAnalytics[]) => {
+    if (!analytics || analytics.length === 0) return [];
+
+    // Find keys with accuracy above 95% and speed above average
+    const avgSpeed = analytics.reduce((sum, a) => sum + a.averageSpeed, 0) / analytics.length;
+    const strongKeys = analytics
+      .filter(a => a.accuracy > 95 && a.averageSpeed > avgSpeed * 1.2)
+      .sort((a, b) => b.accuracy - a.accuracy)
+      .slice(0, 5)
+      .map(a => a.letter);
+
+    return strongKeys;
+  }, []);
+
+  const getLessonsCompleted = useCallback(async (userId: string) => {
+    try {
+      const result = await databaseService.getUserProgress(userId);
+      if (result.error || !result.data) return [];
+
+      // Extract completed lesson IDs from user progress
+      return result.data
+        .filter(progress => progress.completed)
+        .map(progress => progress.lesson_id);
+    } catch (error) {
+      console.error('Error getting lessons completed:', error);
+      return [];
+    }
+  }, []);
+
+  const getMostCommonMistakes = useCallback(async (userId: string) => {
+    try {
+      // Get mistake patterns from database
+      const { data: mistakes, error } = await supabase
+        .from('mistake_patterns')
+        .select('*')
+        .eq('user_id', userId)
+        .order('frequency', { ascending: false })
+        .limit(5);
+
+      if (error) return [];
+      return mistakes || [];
+    } catch (error) {
+      console.error('Error getting common mistakes:', error);
+      return [];
+    }
+  }, []);
+
+  const calculateSessionDistribution = useCallback(async (userId: string) => {
+    try {
+      // Get real session data from database
+      const { data: sessions, error } = await supabase
+        .from('typing_sessions')
+        .select('created_at, practice_time')
+        .eq('user_id', userId);
+
+      if (error || !sessions) return [];
+
+      // Group sessions by hour of day
+      const hourDistribution = Array(24).fill(0).map((_, hour) => ({
+        hour,
+        sessions: 0,
+        totalTime: 0
+      }));
+
+      sessions.forEach(session => {
+        const hour = new Date(session.created_at).getHours();
+        hourDistribution[hour].sessions++;
+        hourDistribution[hour].totalTime += session.practice_time || 0;
+      });
+
+      return hourDistribution.filter(h => h.sessions > 0);
+    } catch (error) {
+      console.error('Error calculating session distribution:', error);
+      return [];
+    }
+  }, []);
 
   return {
     // Current session data

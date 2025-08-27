@@ -13,7 +13,8 @@ import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard
 import { LetterAnalyticsDashboard } from '@/components/analytics/LetterAnalyticsDashboard';
 import { AdaptiveTrainingComponent } from '@/components/training/AdaptiveTrainingComponent';
 import { useStatistics } from '@/hooks/useStatistics';
-import { useCurriculums, useUserStatistics, useTypingSessions, useAuth } from '@/hooks/useDatabase';
+import { useCurriculums, useUserStatistics, useTypingSessions, useAuth, useUserAchievements } from '@/hooks/useDatabase';
+import { EmulationToggle } from '@/components/ui/emulation-toggle';
 import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target, Brain, Zap, Award } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
@@ -159,6 +160,7 @@ const Dashboard = () => {
               Welcome, {profile?.display_name || profile?.username || user.email}
             </span>
             <FocusModeToggle />
+            <EmulationToggle variant="compact" layoutId="colemak" />
             <AccessibilitySettings />
             <ThemeToggle />
             <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -245,7 +247,7 @@ const Dashboard = () => {
                     <Award className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">7</div>
+                    <div className="text-2xl font-bold">{statistics?.streakDays || 0}</div>
                     <p className="text-xs text-muted-foreground">
                       Days practicing
                     </p>
@@ -326,7 +328,7 @@ const Dashboard = () => {
 
               {/* Adaptive Training */}
               <AdaptiveTrainingComponent
-                userId={user?.id || 'mock-user'}
+                userId={user?.id || ''}
                 layoutId="colemak"
                 sessions={sessions}
                 className="mt-6"
@@ -355,7 +357,10 @@ const Dashboard = () => {
                     </Button>
                   </CardContent>
                 </Card>
-                
+
+                {/* Keyboard Setup */}
+                <EmulationToggle variant="keyboard-setup" layoutId="colemak" className="col-span-full" />
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
@@ -365,18 +370,20 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Colemak Basics - Lesson 3</span>
-                        <span className="text-muted-foreground">42 WPM</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Home Row Practice</span>
-                        <span className="text-muted-foreground">38 WPM</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Punctuation Training</span>
-                        <span className="text-muted-foreground">35 WPM</span>
-                      </div>
+                      {sessions.length > 0 ? (
+                        sessions.slice(0, 3).map((session, index) => (
+                          <div key={session.id} className="flex justify-between text-sm">
+                            <span>
+                              {session.curriculum?.name || 'Practice Session'} - Lesson {session.lesson_index + 1}
+                            </span>
+                            <span className="text-muted-foreground">{Math.round(parseFloat(session.wpm.toString()))} WPM</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          No recent sessions. Start practicing to see your activity here!
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

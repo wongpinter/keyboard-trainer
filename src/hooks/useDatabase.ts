@@ -138,10 +138,18 @@ export const useTypingSessions = (userId: string, options: QueryOptions = {}): U
       }
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['typingSessions', userId] });
       queryClient.invalidateQueries({ queryKey: ['userProgress', userId] });
       queryClient.invalidateQueries({ queryKey: ['userStatistics', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userAchievements', userId] });
+
+      // Check for newly unlocked achievements
+      try {
+        await databaseService.checkAndUnlockAchievements(userId);
+      } catch (error) {
+        console.error('Error checking achievements after session:', error);
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -249,6 +257,74 @@ export const useAuth = () => {
   return { user, loading };
 };
 
+// Hook for user achievements
+export const useUserAchievements = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const {
+    data: achievements = [],
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['userAchievements', userId],
+    queryFn: async () => {
+      const result = await databaseService.getUserAchievements(userId);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data || [];
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Mutation to check and unlock achievements
+  const checkAchievementsMutation = useMutation({
+    mutationFn: async () => {
+      const result = await databaseService.checkAndUnlockAchievements(userId);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data || [];
+    },
+    onSuccess: (newlyUnlocked) => {
+      if (newlyUnlocked.length > 0) {
+        // Show toast for newly unlocked achievements
+        newlyUnlocked.forEach(achievement => {
+          toast({
+            title: "🎉 Achievement Unlocked!",
+            description: `${achievement.name}: ${achievement.description}`,
+            duration: 5000,
+          });
+        });
+
+        // Invalidate achievements query to refresh data
+        queryClient.invalidateQueries({ queryKey: ['userAchievements', userId] });
+      }
+    },
+    onError: (error: Error) => {
+      console.error('Error checking achievements:', error);
+    }
+  });
+
+  const checkAchievements = useCallback(() => {
+    if (userId) {
+      checkAchievementsMutation.mutate();
+    }
+  }, [userId, checkAchievementsMutation]);
+
+  return {
+    achievements,
+    loading,
+    error: error?.message || null,
+    refetch,
+    checkAchievements,
+    isCheckingAchievements: checkAchievementsMutation.isPending
+  };
+};
+
 // Hook for creating curriculums (admin/teacher functionality)
 export const useCreateCurriculum = () => {
   const { toast } = useToast();
@@ -305,7 +381,7 @@ export const useOfflineSync = () => {
 
   const syncPendingOperations = useCallback(async () => {
     if (isOnline && pendingOperations.length > 0) {
-      // TODO: Implement sync logic
+      // Sync logic would be implemented here for offline functionality
       console.log('Syncing pending operations:', pendingOperations);
       setPendingOperations([]);
     }

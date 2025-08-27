@@ -10,11 +10,11 @@ interface ProgressTrackerProps {
   lessonProgress?: number;
 }
 
-const ProgressTracker = ({ 
-  stats, 
-  targetWpm = 30, 
-  targetAccuracy = 95, 
-  lessonProgress = 0 
+const ProgressTracker = ({
+  stats,
+  targetWpm = stats.wpm > 0 ? Math.max(30, stats.wpm + 5) : 30,
+  targetAccuracy = stats.accuracy > 0 ? Math.max(95, stats.accuracy + 2) : 95,
+  lessonProgress = 0
 }: ProgressTrackerProps) => {
   const wpmProgress = Math.min((stats.wpm / targetWpm) * 100, 100);
   const accuracyProgress = Math.min((stats.accuracy / targetAccuracy) * 100, 100);
