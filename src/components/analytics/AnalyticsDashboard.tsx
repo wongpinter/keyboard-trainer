@@ -8,7 +8,7 @@ import { WPMAccuracyTracker } from './WPMAccuracyTracker';
 import { ProgressVisualization } from './ProgressVisualization';
 import { MistakeAnalysis } from './MistakeAnalysis';
 import { StatisticsDashboard } from '../statistics/StatisticsDashboard';
-import { useAuth } from '@/hooks/useDatabase';
+import { useAuth, useUserStatistics, useTypingSessions, useUserAchievements } from '@/hooks/useDatabase';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -18,17 +18,20 @@ import {
   Calendar,
   Download,
   Share,
-  Settings,
   RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AnalyticsDashboardProps {
+  layoutId?: string;
   className?: string;
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ className }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ layoutId = "colemak", className }) => {
   const { user } = useAuth();
+  const { statistics } = useUserStatistics(user?.id || '');
+  const { sessions } = useTypingSessions(user?.id || '', { limit: 10 });
+  const { achievements } = useUserAchievements(user?.id || '');
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -40,13 +43,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
   };
 
   const handleExport = () => {
-    // TODO: Implement data export functionality
+    // Export functionality - would generate CSV/PDF of analytics data
     console.log('Exporting analytics data...');
+    // Implementation would go here when needed
   };
 
   const handleShare = () => {
-    // TODO: Implement sharing functionality
+    // Share functionality - would create shareable analytics report
     console.log('Sharing analytics...');
+    // Implementation would go here when needed
   };
 
   if (!user) {
@@ -116,7 +121,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
               <Award className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">85</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {statistics ? Math.round((statistics.averageWpm + statistics.averageAccuracy) / 2) : 0}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Overall typing performance
               </p>
@@ -175,7 +182,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <AnimatedContainer animation="slideUp" delay={200}>
+          <AnimatedContainer animation="slide-up" delay={200}>
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Quick Performance Summary */}
               <Card>
@@ -192,19 +199,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Average WPM</span>
-                      <Badge variant="outline">42 WPM</Badge>
+                      <Badge variant="outline">{Math.round(statistics?.averageWpm || 0)} WPM</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Average Accuracy</span>
-                      <Badge variant="outline">94.2%</Badge>
+                      <Badge variant="outline">{Math.round(statistics?.averageAccuracy || 0)}%</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Total Practice Time</span>
-                      <Badge variant="outline">12.5 hours</Badge>
+                      <Badge variant="outline">
+                        {statistics?.totalPracticeTime ?
+                          Math.round(statistics.totalPracticeTime / 3600 * 10) / 10 : 0} hours
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Sessions Completed</span>
-                      <Badge variant="outline">47 sessions</Badge>
+                      <Badge variant="outline">{statistics?.totalSessions || 0} sessions</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -223,23 +233,38 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      { date: 'Today', wpm: 45, accuracy: 96, time: '15 min' },
-                      { date: 'Yesterday', wpm: 42, accuracy: 94, time: '20 min' },
-                      { date: '2 days ago', wpm: 38, accuracy: 92, time: '12 min' },
-                      { date: '3 days ago', wpm: 41, accuracy: 95, time: '18 min' }
-                    ].map((session, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                        <div>
-                          <div className="text-sm font-medium">{session.date}</div>
-                          <div className="text-xs text-muted-foreground">{session.time} practice</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{session.wpm} WPM</div>
-                          <div className="text-xs text-muted-foreground">{session.accuracy}% accuracy</div>
-                        </div>
+                    {sessions.length > 0 ? (
+                      sessions.slice(0, 4).map((session) => {
+                        const sessionDate = new Date(session.created_at);
+                        const today = new Date();
+                        const diffTime = Math.abs(today.getTime() - sessionDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        let dateLabel = '';
+                        if (diffDays === 1) dateLabel = 'Today';
+                        else if (diffDays === 2) dateLabel = 'Yesterday';
+                        else dateLabel = `${diffDays - 1} days ago`;
+
+                        const practiceMinutes = Math.round((session.practice_time || 0) / 60);
+
+                        return (
+                          <div key={session.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                            <div>
+                              <div className="text-sm font-medium">{dateLabel}</div>
+                              <div className="text-xs text-muted-foreground">{practiceMinutes} min practice</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">{Math.round(parseFloat(session.wpm.toString()))} WPM</div>
+                              <div className="text-xs text-muted-foreground">{Math.round(parseFloat(session.accuracy.toString()))}% accuracy</div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-sm text-muted-foreground text-center py-4">
+                        No recent sessions. Start practicing to see your activity here!
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -247,7 +272,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
           </AnimatedContainer>
 
           {/* Goals and Achievements */}
-          <AnimatedContainer animation="slideUp" delay={400}>
+          <AnimatedContainer animation="slide-up" delay={400}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -263,36 +288,34 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
                   <div className="space-y-3">
                     <h4 className="font-medium">Active Goals</h4>
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Reach 50 WPM</span>
-                        <Badge variant="outline">84% complete</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">95% Accuracy</span>
-                        <Badge variant="outline">99% complete</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">30 Day Streak</span>
-                        <Badge variant="outline">67% complete</Badge>
-                      </div>
+                      {achievements.filter(a => !a.unlockedAt && a.progress > 0).slice(0, 3).map(achievement => (
+                        <div key={achievement.id} className="flex justify-between items-center">
+                          <span className="text-sm">{achievement.name}</span>
+                          <Badge variant="outline">{achievement.progress}% complete</Badge>
+                        </div>
+                      ))}
+                      {achievements.filter(a => !a.unlockedAt && a.progress > 0).length === 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          Start practicing to see your goals!
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   <div className="space-y-3">
                     <h4 className="font-medium">Recent Achievements</h4>
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-yellow-500" />
-                        <span className="text-sm">Speed Demon - 40+ WPM</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm">Accuracy Master - 90%+</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Consistent Typer - 7 day streak</span>
-                      </div>
+                      {achievements.filter(a => a.unlockedAt).slice(0, 3).map(achievement => (
+                        <div key={achievement.id} className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-yellow-500" />
+                          <span className="text-sm">{achievement.name} - {achievement.description}</span>
+                        </div>
+                      ))}
+                      {achievements.filter(a => a.unlockedAt).length === 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          No achievements unlocked yet. Keep practicing!
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -314,7 +337,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
         </TabsContent>
 
         <TabsContent value="detailed" className="space-y-6">
-          <StatisticsDashboard />
+          <StatisticsDashboard layoutId={layoutId} />
         </TabsContent>
       </Tabs>
     </div>

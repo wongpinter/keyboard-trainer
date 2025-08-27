@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnimatedContainer, AnimatedProgressBar, AnimatedCounter } from '@/components/ui/animated-components';
-import { useUserStatistics, useTypingSessions, useAuth } from '@/hooks/useDatabase';
+import { useUserStatistics, useTypingSessions, useAuth, useUserAchievements } from '@/hooks/useDatabase';
 import { StatisticsPeriod } from '@/types/statistics';
 import { 
   TrendingUp, 
@@ -63,11 +63,25 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
   const { user } = useAuth();
   const { statistics, loading: statsLoading, error: statsError } = useUserStatistics(user?.id || '');
   const { sessions, loading: sessionsLoading, error: sessionsError } = useTypingSessions(user?.id || '', { limit: 50 });
+  const {
+    achievements,
+    loading: achievementsLoading,
+    error: achievementsError,
+    checkAchievements,
+    isCheckingAchievements
+  } = useUserAchievements(user?.id || '');
 
   const [selectedPeriod, setSelectedPeriod] = useState<StatisticsPeriod>('week');
 
-  const isLoading = statsLoading || sessionsLoading;
-  const error = statsError || sessionsError;
+  // Auto-check achievements when statistics change
+  useEffect(() => {
+    if (user?.id && statistics && !isCheckingAchievements) {
+      checkAchievements();
+    }
+  }, [user?.id, statistics, checkAchievements, isCheckingAchievements]);
+
+  const isLoading = statsLoading || sessionsLoading || achievementsLoading;
+  const error = statsError || sessionsError || achievementsError;
 
   // Calculate derived statistics from real data
   const userProgress = statistics ? {
@@ -98,39 +112,17 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
 
   const learningInsights = {
     overallProgress: userProgress ? Math.min(100, (userProgress.level - 1) * 10) : 0,
-    strengths: ['Home row keys', 'Common bigrams'],
-    weaknesses: ['Number row', 'Special characters'],
-    recommendations: ['Practice number sequences', 'Focus on punctuation'],
-    nextMilestone: 'Reach 30 WPM consistently'
+    strengths: userProgress?.strongKeys?.slice(0, 2) || ['Building skills'],
+    weaknesses: userProgress?.weakKeys?.slice(0, 2) || ['Identifying areas'],
+    recommendations: userProgress?.weakKeys?.length > 0
+      ? [`Practice ${userProgress.weakKeys[0]} key`, `Focus on ${userProgress.weakKeys[1] || 'accuracy'}`]
+      : ['Continue regular practice', 'Focus on consistency'],
+    nextMilestone: userProgress?.averageWpm < 20 ? 'Reach 20 WPM' :
+                   userProgress?.averageWpm < 30 ? 'Reach 30 WPM consistently' :
+                   userProgress?.averageWpm < 40 ? 'Reach 40 WPM' : 'Master advanced techniques'
   };
 
-  // Mock achievements data - TODO: Replace with real database data
-  const achievements = [
-    {
-      id: 'first-session',
-      name: 'First Steps',
-      description: 'Complete your first typing session',
-      icon: '🎯',
-      progress: 100,
-      unlockedAt: userProgress?.totalSessions ? new Date() : null
-    },
-    {
-      id: 'speed-demon',
-      name: 'Speed Demon',
-      description: 'Reach 40 WPM',
-      icon: '⚡',
-      progress: Math.min(100, ((userProgress?.averageWpm || 0) / 40) * 100),
-      unlockedAt: (userProgress?.averageWpm || 0) >= 40 ? new Date() : null
-    },
-    {
-      id: 'accuracy-master',
-      name: 'Accuracy Master',
-      description: 'Achieve 95% accuracy',
-      icon: '🎯',
-      progress: Math.min(100, ((userProgress?.averageAccuracy || 0) / 95) * 100),
-      unlockedAt: (userProgress?.averageAccuracy || 0) >= 95 ? new Date() : null
-    }
-  ];
+  // Real achievements data from database
 
   if (isLoading) {
     return (
@@ -405,6 +397,18 @@ export const StatisticsDashboard: React.FC<StatisticsDashboardProps> = ({
 
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-4">
+            {/* Test Achievement Check Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={checkAchievements}
+                disabled={isCheckingAchievements}
+                variant="outline"
+                size="sm"
+              >
+                {isCheckingAchievements ? 'Checking...' : 'Check Achievements'}
+              </Button>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               {/* Unlocked Achievements */}
               <Card>

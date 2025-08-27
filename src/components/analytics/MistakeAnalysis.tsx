@@ -111,35 +111,21 @@ export const MistakeAnalysis: React.FC<MistakeAnalysisProps> = ({ className }) =
   const analyzeSessionMistakes = async () => {
     if (!user?.id || !sessions.length) return;
 
-    // This is a simplified analysis - in a real app, you'd track keystrokes
-    // For now, we'll create some sample data based on common patterns
-    const commonMistakes = [
-      { expected: 'e', actual: 'r', type: 'substitution' },
-      { expected: 'i', actual: 'o', type: 'substitution' },
-      { expected: 'a', actual: 's', type: 'substitution' },
-      { expected: 'n', actual: 'm', type: 'substitution' },
-      { expected: 't', actual: 'y', type: 'substitution' }
-    ];
+    // Get real mistake patterns from database
+    const { data: mistakePatterns, error } = await supabase
+      .from('mistake_patterns')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('frequency', { ascending: false })
+      .limit(10);
 
-    // Update mistake patterns in database
-    for (const mistake of commonMistakes) {
-      try {
-        await supabase
-          .from('mistake_patterns')
-          .upsert({
-            user_id: user.id,
-            expected_key: mistake.expected,
-            actual_key: mistake.actual,
-            frequency: Math.floor(Math.random() * 10) + 1,
-            mistake_type: mistake.type,
-            finger_confusion: Math.random() > 0.7,
-            hand_confusion: Math.random() > 0.8,
-            last_occurred_at: new Date().toISOString()
-          }, { onConflict: 'user_id,expected_key,actual_key' });
-      } catch (error) {
-        console.error('Error updating mistake pattern:', error);
-      }
+    if (error || !mistakePatterns) {
+      console.error('Error fetching mistake patterns:', error);
+      return;
     }
+
+    // Use the real mistake patterns from database
+    setMistakePatterns(mistakePatterns);
   };
 
   // Get mistake type icon

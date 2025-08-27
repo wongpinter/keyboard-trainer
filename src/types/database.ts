@@ -78,6 +78,7 @@ export interface UserStatistics {
   improvementRate: number; // WPM improvement per week
   consistencyScore: number; // 0-100 based on session regularity
   lastActiveDate: string;
+  firstSessionDate: string;
   streakDays: number;
 }
 
@@ -194,6 +195,13 @@ export interface DatabaseService {
   // Statistics operations
   getUserStatistics(userId: string): Promise<DatabaseResponse<UserStatistics>>;
   getProgressAnalytics(userId: string, timeframe?: string): Promise<DatabaseResponse<ProgressAnalytics>>;
+
+  // Achievement operations
+  getUserAchievements(userId: string): Promise<DatabaseResponse<any[]>>;
+  calculateStreakDays(userId: string): Promise<number>;
+  calculateLongestStreak(userId: string): Promise<number>;
+  unlockAchievement(userId: string, achievementId: string): Promise<DatabaseResponse<any>>;
+  checkAndUnlockAchievements(userId: string): Promise<DatabaseResponse<any[]>>;
 }
 
 // Hook return types

@@ -145,8 +145,7 @@ export const handleNetworkError = (
     context: 'Network',
   });
 
-  // For now, just show a simple error toast
-  // TODO: Add retry functionality with proper React component integration
+  // Show error toast - retry functionality would be added here if needed
   if (retryFn && isNetworkError(appError)) {
     toast({
       title: 'Connection Error',

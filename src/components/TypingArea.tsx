@@ -5,6 +5,8 @@ import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibili
 import { useAnimations, scaleIn } from '@/hooks/useAnimations';
 import { useStatistics } from '@/hooks/useStatistics';
 import { useFocusMode } from '@/contexts/FocusModeContext';
+import { useEmulation } from '@/contexts/EmulationContext';
+import { remapKey, createEmulationConfig } from '@/utils/keyboardEmulation';
 import FocusMode from '@/components/focus/FocusMode';
 // import { validateTypingText } from '@/utils/validation';
 // import { handleValidationError } from '@/utils/errorHandler';
@@ -15,14 +17,16 @@ interface TypingAreaProps {
   onStatsUpdate: (stats: TypingStats) => void;
   onKeyPress: (key: string, isCorrect: boolean) => void;
   onComplete: () => void;
+  layoutId?: string; // For emulation purposes
 }
 
-const TypingArea = ({ 
-  text, 
-  layout, 
-  onStatsUpdate, 
-  onKeyPress, 
-  onComplete 
+const TypingArea = ({
+  text,
+  layout,
+  onStatsUpdate,
+  onKeyPress,
+  onComplete,
+  layoutId = 'colemak'
 }: TypingAreaProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
@@ -40,6 +44,16 @@ const TypingArea = ({
     isSessionActive
   } = useStatistics();
   const { isFocusMode } = useFocusMode();
+  const { isLayoutEmulationEnabled, getPhysicalKeyboardType } = useEmulation();
+  const isEmulationEnabled = isLayoutEmulationEnabled(layoutId);
+  const physicalKeyboardType = getPhysicalKeyboardType();
+
+  // Create emulation configuration
+  const emulationConfig = createEmulationConfig(
+    physicalKeyboardType,
+    layoutId,
+    isEmulationEnabled
+  );
   const completionRef = useRef<HTMLDivElement>(null);
   const lastKeystrokeTime = useRef<number>(Date.now());
 
@@ -88,7 +102,10 @@ const TypingArea = ({
       }
 
       const expectedChar = text[currentIndex];
-      const typedChar = convertKey(e.key);
+
+      // Apply keyboard emulation first
+      const emulatedKey = remapKey(e.key, emulationConfig);
+      const typedChar = convertKey(emulatedKey);
 
       // Only process printable characters
       if (e.key.length === 1) {
@@ -214,23 +231,50 @@ const TypingArea = ({
     if (index < currentIndex) {
       // Already typed - animate in with scale
       const isError = errors[index];
-      className = cn(
-        className,
-        isError
-          ? "bg-destructive/20 text-destructive animate-shake"
-          : "bg-success/20 text-success animate-scale-in",
-        "transform"
-      );
+      if (isEmulationEnabled) {
+        // Full visual feedback in emulation mode
+        className = cn(
+          className,
+          isError
+            ? "bg-destructive/20 text-destructive animate-shake"
+            : "bg-success/20 text-success animate-scale-in",
+          "transform"
+        );
+      } else {
+        // Minimal feedback in expert mode
+        className = cn(
+          className,
+          isError
+            ? "text-destructive"
+            : "text-foreground",
+          "opacity-80"
+        );
+      }
     } else if (index === currentIndex) {
       // Current character - pulse and highlight
-      className = cn(
-        className,
-        "bg-primary/20 animate-typing-cursor border-l-2 border-primary",
-        "transform scale-110"
-      );
+      if (isEmulationEnabled) {
+        // Full cursor highlighting in emulation mode
+        className = cn(
+          className,
+          "bg-primary/20 animate-typing-cursor border-l-2 border-primary",
+          "transform scale-110"
+        );
+      } else {
+        // Subtle cursor in expert mode
+        className = cn(
+          className,
+          "border-l-2 border-primary/60",
+          "text-foreground"
+        );
+      }
     } else {
       // Future characters - subtle fade
-      className = cn(className, "text-muted-foreground opacity-60");
+      className = cn(
+        className,
+        isEmulationEnabled
+          ? "text-muted-foreground opacity-60"
+          : "text-muted-foreground opacity-40"
+      );
     }
 
     return (
@@ -261,7 +305,12 @@ const TypingArea = ({
       {/* Regular Typing Area */}
       <div className="space-y-4">
       <div
-        className="p-6 bg-card rounded-lg border-2 border-dashed border-muted-foreground/20 min-h-[100px] flex items-center cursor-text focus-within:border-primary/50 transition-colors"
+        className={cn(
+          "p-6 bg-card rounded-lg min-h-[100px] flex items-center cursor-text transition-colors",
+          isEmulationEnabled
+            ? "border-2 border-dashed border-muted-foreground/20 focus-within:border-primary/50"
+            : "border border-muted-foreground/10 focus-within:border-primary/30"
+        )}
         onClick={() => inputRef.current?.focus()}
         role="textbox"
         aria-label="Typing practice area"

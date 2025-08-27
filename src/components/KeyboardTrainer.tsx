@@ -15,6 +15,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RotateCcw, SkipForward, BookOpen, List, User, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useFocusMode } from '@/contexts/FocusModeContext';
+import { useEmulation } from '@/contexts/EmulationContext';
+import { EmulationToggle } from '@/components/ui/emulation-toggle';
 
 const KeyboardTrainer = () => {
   const [showFingerGuide, setShowFingerGuide] = useState(true);
@@ -22,6 +25,12 @@ const KeyboardTrainer = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { isFocusMode } = useFocusMode();
+  const { isLayoutEmulationEnabled } = useEmulation();
+
+  // Get current layout ID (could be dynamic based on selected curriculum)
+  const currentLayoutId = 'colemak'; // This could come from props or state
+  const isEmulationEnabled = isLayoutEmulationEnabled(currentLayoutId);
 
   const {
     session,
@@ -208,25 +217,28 @@ const KeyboardTrainer = () => {
             <TypingArea
               text={session.practiceText}
               layout={COLEMAK_LAYOUT}
+              layoutId={currentLayoutId}
               onStatsUpdate={updateStats}
               onKeyPress={handleKeyPress}
               onComplete={handleLessonComplete}
             />
             
-            {/* Keyboard Visualization - Right below typing area */}
-            <KeyboardVisualization
-              layout={COLEMAK_LAYOUT}
-              keyStates={session.keyStates}
-              showFingerGuide={showFingerGuide}
-            />
+            {/* Keyboard Visualization - Only show in emulation mode */}
+            {isEmulationEnabled && (
+              <KeyboardVisualization
+                layout={COLEMAK_LAYOUT}
+                keyStates={session.keyStates}
+                showFingerGuide={showFingerGuide}
+              />
+            )}
           </div>
 
           {/* Right: Progress Stats */}
           <div>
             <ProgressTracker
               stats={session.stats}
-              targetWpm={30}
-              targetAccuracy={95}
+              targetWpm={session.selectedLesson?.minWpm || 30}
+              targetAccuracy={session.selectedLesson?.minAccuracy || 95}
               lessonProgress={currentLessonProgress?.mastery_level || 0}
             />
           </div>
@@ -267,6 +279,9 @@ const KeyboardTrainer = () => {
           </div>
         </Card>
       </div>
+
+      {/* Floating Emulation Toggle */}
+      <EmulationToggle variant="floating" layoutId={currentLayoutId} />
     </div>
   );
 };

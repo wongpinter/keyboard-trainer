@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { StatisticsDashboard } from '@/components/statistics/StatisticsDashboard';
 import { useAuth } from '@/hooks/useDatabase';
+import { EmulationToggle } from '@/components/ui/emulation-toggle';
 // import { populateStatisticsData, clearStatisticsData } from '@/scripts/populateStatisticsData';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -52,6 +53,9 @@ export default function Statistics() {
           </Card>
         ) : (
           <div className="space-y-6">
+            {/* Keyboard Setup */}
+            <EmulationToggle variant="keyboard-setup" layoutId="colemak" />
+
             <Card>
               <CardHeader>
                 <CardTitle>Statistics Dashboard</CardTitle>
