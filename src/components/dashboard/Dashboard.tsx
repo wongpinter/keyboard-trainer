@@ -14,7 +14,7 @@ import { LetterAnalyticsDashboard } from '@/components/analytics/LetterAnalytics
 import { AdaptiveTrainingComponent } from '@/components/training/AdaptiveTrainingComponent';
 import { useStatistics } from '@/hooks/useStatistics';
 import { useCurriculums, useUserStatistics, useTypingSessions, useAuth } from '@/hooks/useDatabase';
-import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target, Brain, Zap } from 'lucide-react';
+import { Keyboard, LogOut, Plus, BarChart3, Trophy, Clock, Target, Brain, Zap, Award } from 'lucide-react';
 import CurriculumList from './CurriculumList';
 import UserStats from './UserStats';
 import LayoutBuilder from './LayoutBuilder';
