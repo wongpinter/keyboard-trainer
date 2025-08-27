@@ -1,9 +1,10 @@
 import React from 'react';
 import { toast } from '@/hooks/use-toast';
-import { 
-  BaseAppError, 
-  getErrorMessage, 
-  logError, 
+import i18n from '@/i18n/config';
+import {
+  BaseAppError,
+  getErrorMessage,
+  logError,
   createErrorFromSupabase,
   isAuthenticationError,
   isValidationError,
@@ -71,20 +72,20 @@ export const handleError = (
 // Show appropriate toast based on error type
 const showErrorToast = (error: BaseAppError): void => {
   const message = getErrorMessage(error);
-  
+
   // Determine toast variant based on error type
   let variant: 'default' | 'destructive' = 'destructive';
-  let title = 'Error';
+  let title = i18n.t('common:status.error');
 
   if (isAuthenticationError(error)) {
-    title = 'Authentication Error';
+    title = i18n.t('errors:auth.authError', 'Authentication Error');
   } else if (isValidationError(error)) {
-    title = 'Validation Error';
+    title = i18n.t('errors:validation.validationError', 'Validation Error');
     variant = 'default'; // Less severe for validation errors
   } else if (isNetworkError(error)) {
-    title = 'Connection Error';
+    title = i18n.t('errors:network.networkError', 'Connection Error');
   } else if (isAPIError(error)) {
-    title = 'Service Error';
+    title = i18n.t('errors:api.apiError', 'Service Error');
   }
 
   toast({

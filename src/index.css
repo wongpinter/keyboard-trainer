@@ -119,6 +119,57 @@ All colors MUST be HSL.
   }
 }
 
+/* Internationalization utilities */
+.text-ellipsis-multiline {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Language-specific adjustments */
+[lang="id"] .hero-title {
+  /* Adjust line height for Indonesian text */
+  line-height: 1.1;
+}
+
+[lang="id"] .card-description {
+  /* Ensure proper spacing for longer Indonesian descriptions */
+  line-height: 1.5;
+}
+
+/* Responsive text sizing for different languages */
+@media (max-width: 640px) {
+  [lang="id"] .hero-title {
+    font-size: 2rem;
+  }
+
+  [lang="id"] .feature-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Button text overflow handling */
+.btn-text-responsive {
+  @apply truncate max-w-full;
+}
+
+/* Navigation responsive adjustments */
+.nav-item-text {
+  @apply hidden sm:inline-block;
+}
+
+@media (max-width: 768px) {
+  .nav-item-text {
+    @apply hidden;
+  }
+}
+
   /* Dark Mode Color Palette */
   .dark {
     --background: 220 15% 8%;

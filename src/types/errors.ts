@@ -172,7 +172,22 @@ export const ERROR_MESSAGES: Record<string, string> = {
 
 // Helper function to get user-friendly error message
 export const getErrorMessage = (error: unknown): string => {
+  // Try to use i18n if available
+  let i18n: any = null;
+  try {
+    i18n = require('@/i18n/config').default;
+  } catch {
+    // Fallback to static messages if i18n is not available
+  }
+
   if (isAppError(error)) {
+    if (i18n && i18n.exists) {
+      // Try to get translated error message
+      const translationKey = `errors:general.${error.code.toLowerCase()}`;
+      if (i18n.exists(translationKey)) {
+        return i18n.t(translationKey);
+      }
+    }
     return ERROR_MESSAGES[error.code] || error.message;
   }
 
@@ -182,6 +197,10 @@ export const getErrorMessage = (error: unknown): string => {
 
   if (typeof error === 'string') {
     return error;
+  }
+
+  if (i18n && i18n.exists && i18n.exists('errors:general.unknownError')) {
+    return i18n.t('errors:general.unknownError');
   }
 
   return ERROR_MESSAGES.UNKNOWN_ERROR;
