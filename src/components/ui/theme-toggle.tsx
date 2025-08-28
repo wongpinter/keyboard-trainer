@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,26 +22,27 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   variant = 'ghost',
   size = 'icon'
 }) => {
+  const { t } = useTranslation(['common']);
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const themes = [
     {
       value: 'light' as const,
-      label: 'Light',
+      label: t('common:theme.light'),
       icon: Sun,
-      description: 'Light theme'
+      description: t('common:theme.lightDescription')
     },
     {
       value: 'dark' as const,
-      label: 'Dark', 
+      label: t('common:theme.dark'),
       icon: Moon,
-      description: 'Dark theme'
+      description: t('common:theme.darkDescription')
     },
     {
       value: 'system' as const,
-      label: 'System',
+      label: t('common:theme.system'),
       icon: Monitor,
-      description: 'Follow system preference'
+      description: t('common:theme.systemDescription')
     }
   ];
 
@@ -57,10 +59,10 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             "relative transition-colors",
             className
           )}
-          aria-label="Toggle theme"
+          aria-label={t('common:theme.toggleTheme')}
         >
           <CurrentIcon className="h-4 w-4 transition-all" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t('common:theme.toggleTheme')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

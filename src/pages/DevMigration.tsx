@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MigrationRunner } from '@/components/admin/MigrationRunner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,6 +11,7 @@ import { Shield, AlertTriangle } from 'lucide-react';
  * Only accessible in development environment or with special access
  */
 export default function DevMigration() {
+  const { t } = useTranslation(['admin', 'common', 'errors']);
   const navigate = useNavigate();
   const [hasAccess, setHasAccess] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -50,7 +52,7 @@ export default function DevMigration() {
         <div className="flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Checking access permissions...</p>
+            <p>{t('admin:migration.checkingPermissions')}</p>
           </div>
         </div>
       </div>
@@ -64,10 +66,10 @@ export default function DevMigration() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
               <Shield className="w-5 h-5" />
-              Access Denied
+              {t('admin:migration.accessDenied')}
             </CardTitle>
             <CardDescription>
-              Migration functionality is restricted to development environments
+              {t('admin:migration.restrictedToDev')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,9 +100,9 @@ export default function DevMigration() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Database Migration</h1>
+        <h1 className="text-3xl font-bold">{t('admin:migration.databaseMigration')}</h1>
         <p className="text-muted-foreground mt-2">
-          Developer tool for migrating training data to Supabase database
+          {t('admin:migration.developerTool')}
         </p>
       </div>
 
@@ -119,7 +121,7 @@ export default function DevMigration() {
       <div className="mt-8">
         <Card>
           <CardHeader>
-            <CardTitle>Migration Guidelines</CardTitle>
+            <CardTitle>{t('admin:migration.guidelines')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

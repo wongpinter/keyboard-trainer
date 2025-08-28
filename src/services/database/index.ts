@@ -175,8 +175,8 @@ class SupabaseDatabaseService implements DatabaseService {
   }
 
   async updateUserProgress(
-    userId: string, 
-    curriculumId: string, 
+    userId: string,
+    curriculumId: string,
     progress: UserProgressUpdate
   ): Promise<DatabaseResponse<any>> {
     return this.executeQuery(async () => {
@@ -186,6 +186,8 @@ class SupabaseDatabaseService implements DatabaseService {
           user_id: userId,
           curriculum_id: curriculumId,
           ...progress
+        }, {
+          onConflict: 'user_id,curriculum_id'
         })
         .select()
         .single();

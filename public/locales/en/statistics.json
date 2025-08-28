@@ -200,5 +200,79 @@
     "customReport": "Custom Report",
     "scheduledReport": "Scheduled Report",
     "emailReport": "Email Report"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "welcomeBack": "Welcome back",
+    "quickStats": "Quick Stats",
+    "recentActivity": "Recent Activity",
+    "todaysProgress": "Today's Progress",
+    "weeklyGoals": "Weekly Goals",
+    "monthlyGoals": "Monthly Goals",
+    "personalBest": "Personal Best",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "totalSessions": "Total Sessions",
+    "totalTime": "Total Time",
+    "averageSession": "Average Session",
+    "improvementRate": "Improvement Rate",
+    "nextMilestone": "Next Milestone",
+    "recommendedPractice": "Recommended Practice",
+    "trackProgress": "Track your progress and manage your typing curriculum",
+    "quickActions": "Quick Actions",
+    "quickActionsDesc": "Jump into practice or view detailed analytics",
+    "sessionsToday": "Sessions completed today",
+    "daysPracticing": "Days practicing"
+  },
+  "realtime": {
+    "liveStats": "Live Stats",
+    "speed": "Speed",
+    "accuracy": "Accuracy",
+    "currentWpm": "Current WPM",
+    "currentAccuracy": "Current Accuracy",
+    "sessionTime": "Session Time",
+    "charactersTyped": "Characters Typed",
+    "errorsCount": "Errors",
+    "correctCount": "Correct",
+    "streak": "Streak",
+    "bestWpm": "Best WPM",
+    "averageWpm": "Average WPM",
+    "consistency": "Consistency",
+    "performance": "Performance",
+    "excellent": "Excellent",
+    "good": "Good",
+    "needsWork": "Needs Work"
+  },
+  "analytics": {
+    "letterAnalytics": "Letter Analytics",
+    "mistakeAnalysis": "Mistake Analysis",
+    "progressVisualization": "Progress Visualization",
+    "wpmAccuracyTracker": "WPM & Accuracy Tracker",
+    "heatmap": "Heatmap",
+    "weakestKeys": "Weakest Keys",
+    "strongestKeys": "Strongest Keys",
+    "improvementAreas": "Improvement Areas",
+    "practiceRecommendations": "Practice Recommendations",
+    "keyFrequency": "Key Frequency",
+    "errorPatterns": "Error Patterns",
+    "timeOfDay": "Time of Day",
+    "sessionLength": "Session Length",
+    "difficultyLevel": "Difficulty Level",
+    "letters": "Letters",
+    "fingers": "Fingers",
+    "comprehensiveAnalysis": "Comprehensive analysis of your typing performance and progress"
+  },
+  "titles": {
+    "dashboard": "Dashboard",
+    "overview": "Overview",
+    "detailed": "Detailed",
+    "statisticsAndAnalytics": "Statistics & Analytics"
+  },
+  "auth": {
+    "signInToViewStats": "Please sign in to view your typing statistics and analytics"
+  },
+  "dashboard": {
+    "yourTypingStats": "Your typing statistics and analytics",
+    "loadingDashboard": "Loading statistics dashboard..."
   }
 }

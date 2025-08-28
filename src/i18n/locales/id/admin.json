@@ -1,0 +1,40 @@
+{
+  "migration": {
+    "checkingPermissions": "Memeriksa izin akses...",
+    "accessDenied": "Akses Ditolak",
+    "restrictedToDev": "Fungsi migrasi terbatas pada lingkungan pengembangan",
+    "databaseMigration": "Migrasi Database",
+    "developerTool": "Alat pengembang untuk migrasi data pelatihan ke database Supabase",
+    "guidelines": "Panduan Migrasi",
+    "unauthorizedAccess": "Percobaan Akses Tidak Sah",
+    "unauthorizedDescription": "Fungsi migrasi database hanya tersedia untuk pengembang di lingkungan pengembangan. Anda akan dialihkan ke dashboard sebentar lagi.",
+    "forDevelopers": "Untuk Pengembang:",
+    "ensureDevMode": "Pastikan Anda menjalankan dalam mode pengembangan",
+    "setEnvVariable": "Set VITE_ENABLE_MIGRATION=true di file .env Anda",
+    "accessViaLocalhost": "Akses melalui localhost selama pengembangan",
+    "devEnvironmentDetected": "Lingkungan Pengembang Terdeteksi",
+    "devEnvironmentDescription": "Alat migrasi ini hanya tersedia di lingkungan pengembangan. Tidak akan dapat diakses di build produksi.",
+    "beforeRunning": "Sebelum Menjalankan Migrasi:",
+    "ensureSupabase": "Pastikan Supabase dikonfigurasi dengan benar",
+    "verifyConnection": "Verifikasi koneksi database berfungsi",
+    "runDryRun": "Jalankan dry run terlebih dahulu untuk pratinjau perubahan",
+    "backupData": "Backup data yang ada jika diperlukan",
+    "afterMigration": "Setelah Migrasi:",
+    "verifyCurriculums": "Verifikasi semua kurikulum dibuat dengan benar",
+    "testLessonLoading": "Test loading pelajaran dan pembuatan konten",
+    "updateApplication": "Update aplikasi untuk menggunakan database alih-alih data statis",
+    "secureEndpoints": "Hapus atau amankan endpoint migrasi untuk produksi"
+  },
+  "general": {
+    "adminPanel": "Panel Admin",
+    "dashboard": "Dashboard Admin",
+    "users": "Pengguna",
+    "settings": "Pengaturan",
+    "logs": "Log",
+    "maintenance": "Pemeliharaan",
+    "backup": "Backup",
+    "restore": "Restore",
+    "export": "Ekspor",
+    "import": "Impor"
+  }
+}

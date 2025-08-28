@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnimatedCounter, AnimatedProgressBar } from '@/components/ui/animated-components';
 import { useStatistics } from '@/hooks/useStatistics';
@@ -24,11 +25,12 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
   compact = false,
   showProgress = true
 }) => {
-  const { 
-    currentSession, 
-    isSessionActive, 
+  const { t, ready } = useTranslation(['statistics', 'common']);
+  const {
+    currentSession,
+    isSessionActive,
     calculateCurrentStats,
-    userProgress 
+    userProgress
   } = useStatistics();
 
   const [stats, setStats] = useState({
@@ -84,6 +86,20 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
     return 'destructive';
   };
 
+  // Don't render if translations aren't ready
+  if (!ready) {
+    return (
+      <Card className={className}>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            <Activity className="h-8 w-8 mx-auto mb-2 animate-pulse" />
+            <p>Loading...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (compact) {
     return (
       <div className={cn('flex gap-4', className)}>
@@ -92,15 +108,15 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           <span className="font-mono text-lg font-bold">
             <AnimatedCounter value={stats.wpm} />
           </span>
-          <span className="text-sm text-muted-foreground">WPM</span>
+          <span className="text-sm text-muted-foreground">{t('common:units.wpm')}</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-green-500" />
           <span className="font-mono text-lg font-bold">
             <AnimatedCounter value={stats.accuracy} suffix="%" />
           </span>
-          <span className="text-sm text-muted-foreground">ACC</span>
+          <span className="text-sm text-muted-foreground">{t('statistics:metrics.accuracy')}</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -122,7 +138,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           isSessionActive && 'ring-2 ring-primary/20'
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Speed</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statistics:realtime.speed')}</CardTitle>
             <Zap className={cn(
               'h-4 w-4',
               stats.wpm >= 30 ? 'text-green-500' : 
@@ -132,7 +148,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           <CardContent>
             <div className="text-2xl font-bold font-mono">
               <AnimatedCounter value={stats.wpm} />
-              <span className="text-sm font-normal text-muted-foreground ml-1">WPM</span>
+              <span className="text-sm font-normal text-muted-foreground ml-1">{t('common:units.wpm')}</span>
             </div>
             {userProgress && (
               <p className="text-xs text-muted-foreground">
@@ -147,7 +163,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           isSessionActive && 'ring-2 ring-primary/20'
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Accuracy</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statistics:realtime.accuracy')}</CardTitle>
             <Target className={cn(
               'h-4 w-4',
               stats.accuracy >= 95 ? 'text-green-500' : 
@@ -171,7 +187,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           isSessionActive && 'ring-2 ring-primary/20'
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Consistency</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statistics:realtime.consistency')}</CardTitle>
             <Activity className={cn(
               'h-4 w-4',
               stats.consistency >= 80 ? 'text-green-500' : 
@@ -193,7 +209,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
           isSessionActive && 'ring-2 ring-primary/20'
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Time</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statistics:realtime.sessionTime')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -201,7 +217,7 @@ export const RealTimeStats: React.FC<RealTimeStatsProps> = ({
               {formatTime(sessionTime)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Session duration
+              {t('statistics:realtime.sessionTime')}
             </p>
           </CardContent>
         </Card>

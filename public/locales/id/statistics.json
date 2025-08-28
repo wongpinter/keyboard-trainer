@@ -200,5 +200,79 @@
     "customReport": "Laporan Kustom",
     "scheduledReport": "Laporan Terjadwal",
     "emailReport": "Email Laporan"
+  },
+  "dashboard": {
+    "welcome": "Selamat Datang",
+    "welcomeBack": "Selamat datang kembali",
+    "quickStats": "Statistik Cepat",
+    "recentActivity": "Aktivitas Terbaru",
+    "todaysProgress": "Kemajuan Hari Ini",
+    "weeklyGoals": "Target Mingguan",
+    "monthlyGoals": "Target Bulanan",
+    "personalBest": "Rekor Pribadi",
+    "currentStreak": "Streak Saat Ini",
+    "longestStreak": "Streak Terpanjang",
+    "totalSessions": "Total Sesi",
+    "totalTime": "Total Waktu",
+    "averageSession": "Rata-rata Sesi",
+    "improvementRate": "Tingkat Peningkatan",
+    "nextMilestone": "Milestone Selanjutnya",
+    "recommendedPractice": "Latihan Direkomendasikan",
+    "trackProgress": "Lacak kemajuan Anda dan kelola kurikulum mengetik",
+    "quickActions": "Aksi Cepat",
+    "quickActionsDesc": "Langsung berlatih atau lihat analitik detail",
+    "sessionsToday": "Sesi selesai hari ini",
+    "daysPracticing": "Hari berlatih"
+  },
+  "realtime": {
+    "liveStats": "Statistik Live",
+    "speed": "Kecepatan",
+    "accuracy": "Akurasi",
+    "currentWpm": "KPM Saat Ini",
+    "currentAccuracy": "Akurasi Saat Ini",
+    "sessionTime": "Waktu Sesi",
+    "charactersTyped": "Karakter Diketik",
+    "errorsCount": "Error",
+    "correctCount": "Benar",
+    "streak": "Streak",
+    "bestWpm": "KPM Terbaik",
+    "averageWpm": "Rata-rata KPM",
+    "consistency": "Konsistensi",
+    "performance": "Performa",
+    "excellent": "Luar Biasa",
+    "good": "Bagus",
+    "needsWork": "Perlu Diperbaiki"
+  },
+  "analytics": {
+    "letterAnalytics": "Analitik Huruf",
+    "mistakeAnalysis": "Analisis Kesalahan",
+    "progressVisualization": "Visualisasi Kemajuan",
+    "wpmAccuracyTracker": "Pelacak KPM & Akurasi",
+    "heatmap": "Peta Panas",
+    "weakestKeys": "Tombol Terlemah",
+    "strongestKeys": "Tombol Terkuat",
+    "improvementAreas": "Area Peningkatan",
+    "practiceRecommendations": "Rekomendasi Latihan",
+    "keyFrequency": "Frekuensi Tombol",
+    "errorPatterns": "Pola Error",
+    "timeOfDay": "Waktu Hari",
+    "sessionLength": "Panjang Sesi",
+    "difficultyLevel": "Tingkat Kesulitan",
+    "letters": "Huruf",
+    "fingers": "Jari",
+    "comprehensiveAnalysis": "Analisis komprehensif performa dan kemajuan mengetik Anda"
+  },
+  "titles": {
+    "dashboard": "Dashboard",
+    "overview": "Ringkasan",
+    "detailed": "Detail",
+    "statisticsAndAnalytics": "Statistik & Analitik"
+  },
+  "auth": {
+    "signInToViewStats": "Silakan masuk untuk melihat statistik dan analitik mengetik Anda"
+  },
+  "dashboard": {
+    "yourTypingStats": "Statistik dan analitik mengetik Anda",
+    "loadingDashboard": "Memuat dashboard statistik..."
   }
 }

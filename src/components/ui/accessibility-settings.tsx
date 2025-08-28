@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Settings, Eye, Type, Keyboard, Volume2, Contrast } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -33,6 +34,7 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
   variant = 'ghost',
   size = 'icon'
 }) => {
+  const { t } = useTranslation(['common', 'settings']);
   const { preferences, updatePreference, resetPreferences } = useAccessibility();
 
   const handlePreferenceChange = (key: keyof typeof preferences, value: boolean) => {
@@ -41,14 +43,14 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
     // Announce changes to screen readers
     const settingName = key.replace(/([A-Z])/g, ' $1').toLowerCase();
     announceToScreenReader(
-      `${settingName} ${value ? 'enabled' : 'disabled'}`,
+      `${settingName} ${value ? t('common:ui.enable') : t('common:ui.disable')}`,
       'polite'
     );
   };
 
   const handleReset = () => {
     resetPreferences();
-    announceToScreenReader('Accessibility settings reset to defaults', 'polite');
+    announceToScreenReader(t('common:settings.resetToDefaults'), 'polite');
   };
 
   const accessibilityOptions = [
@@ -107,10 +109,10 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
             "relative transition-colors",
             className
           )}
-          aria-label="Open accessibility settings"
+          aria-label={t('common:settings.accessibilitySettings')}
         >
           <Settings className="h-4 w-4" />
-          <span className="sr-only">Accessibility Settings</span>
+          <span className="sr-only">{t('common:settings.accessibilitySettings')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent 
@@ -120,11 +122,10 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Accessibility Settings
+            {t('common:settings.accessibilitySettings')}
           </DialogTitle>
           <DialogDescription id="accessibility-description">
-            Customize the application to meet your accessibility needs. 
-            These settings will be saved and applied across all sessions.
+            {t('common:settings.customizeAccessibility')}
           </DialogDescription>
         </DialogHeader>
 

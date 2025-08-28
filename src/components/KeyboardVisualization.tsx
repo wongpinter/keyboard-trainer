@@ -1,5 +1,6 @@
 import { KeyboardLayout, KeyState } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import { useTheme, getThemeColors } from '@/contexts/ThemeContext';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
 import { useAnimations, pulse } from '@/hooks/useAnimations';
@@ -16,6 +17,7 @@ const KeyboardVisualization = ({
   keyStates,
   showFingerGuide = false
 }: KeyboardVisualizationProps) => {
+  const { t } = useTranslation(['training', 'common']);
   const { resolvedTheme } = useTheme();
   const themeColors = getThemeColors(resolvedTheme);
   const { preferences } = useAccessibility();
@@ -98,11 +100,23 @@ const KeyboardVisualization = ({
     <div
       className={cn("flex gap-1 justify-center", rowClass)}
       role="row"
-      aria-label={`${rowName} row`}
+      aria-label={t('training:keyboard.rowLabel', { rowName })}
     >
       {rowKeys.map((keyMapping) => {
         const state = getKeyState(keyMapping.target);
-        const fingerName = ['left pinky', 'left ring', 'left middle', 'left index', 'left thumb', 'right thumb', 'right index', 'right middle', 'right ring', 'right pinky'][keyMapping.finger];
+        const fingerNames = [
+          t('training:keyboard.leftPinky'),
+          t('training:keyboard.leftRing'),
+          t('training:keyboard.leftMiddle'),
+          t('training:keyboard.leftIndex'),
+          t('training:keyboard.leftThumb'),
+          t('training:keyboard.rightThumb'),
+          t('training:keyboard.rightIndex'),
+          t('training:keyboard.rightMiddle'),
+          t('training:keyboard.rightRing'),
+          t('training:keyboard.rightPinky')
+        ];
+        const fingerName = fingerNames[keyMapping.finger];
 
         return (
           <div
@@ -119,7 +133,11 @@ const KeyboardVisualization = ({
               state === 'active' && 'scale-95'
             )}
             role="gridcell"
-            aria-label={`Key ${keyMapping.target.toUpperCase()}, ${fingerName}, ${state === 'next' ? 'next to type' : state}`}
+            aria-label={t('training:keyboard.keyLabel', {
+              key: keyMapping.target.toUpperCase(),
+              finger: fingerName,
+              state: state === 'next' ? t('training:keyboard.nextToType') : t(`training:keyboard.${state}`)
+            })}
             aria-pressed={state === 'active'}
             tabIndex={state === 'next' ? 0 : -1}
           >
@@ -146,30 +164,30 @@ const KeyboardVisualization = ({
       ref={keyboardRef}
       className="bg-card/50 p-4 rounded-lg border"
       role="application"
-      aria-label={`${layout.name} keyboard layout visualization`}
+      aria-label={t('training:keyboard.layoutVisualization', { layoutName: layout.name })}
       aria-describedby="keyboard-instructions"
     >
       <div
         className="space-y-1"
         role="grid"
-        aria-label="Virtual keyboard"
+        aria-label={t('training:keyboard.virtualKeyboard')}
       >
-        {renderKeyRow(topRow, "", "Top")}
-        {renderKeyRow(homeRow, "", "Home")}
-        {renderKeyRow(bottomRow, "", "Bottom")}
+        {renderKeyRow(topRow, "", t('training:keyboard.topRow'))}
+        {renderKeyRow(homeRow, "", t('training:keyboard.homeRow'))}
+        {renderKeyRow(bottomRow, "", t('training:keyboard.bottomRow'))}
       </div>
 
       {/* Hidden instructions for screen readers */}
       <div id="keyboard-instructions" className="sr-only">
         Virtual keyboard showing {layout.name} layout.
-        {showFingerGuide ? 'Keys are colored by finger assignment. ' : ''}
-        Use Tab to navigate between keys.
-        The next key to type is highlighted and announced.
+        {showFingerGuide ? t('training:keyboard.fingerGuideDescription') + ' ' : ''}
+        {t('training:keyboard.navigationInstructions')}
+        {t('training:keyboard.nextKeyDescription')}
       </div>
       
       <div className="mt-3 text-center">
         <p className="text-xs text-muted-foreground">
-          {layout.name} Layout • Yellow = Next Key
+          {t('training:keyboard.layoutInfo', { layoutName: layout.name })}
         </p>
       </div>
     </div>

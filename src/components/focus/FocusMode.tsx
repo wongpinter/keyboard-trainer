@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Eye, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 import { useFocusMode } from '@/contexts/FocusModeContext';
 import { useAccessibility } from '@/hooks/useAccessibility';
+import { useEmulation } from '@/contexts/EmulationContext';
+import { remapKey, createEmulationConfig } from '@/utils/keyboardEmulation';
 import { cn } from '@/lib/utils';
 import { KeyboardLayout } from '@/types/keyboard';
 
@@ -11,6 +14,7 @@ interface FocusModeProps {
   onComplete?: () => void;
   onKeyPress?: (expectedChar: string, isCorrect: boolean) => void;
   className?: string;
+  layoutId?: string; // For emulation purposes
 }
 
 export const FocusMode: React.FC<FocusModeProps> = ({
@@ -18,10 +22,26 @@ export const FocusMode: React.FC<FocusModeProps> = ({
   layout,
   onComplete,
   onKeyPress,
-  className
+  className,
+  layoutId = 'colemak'
 }) => {
+  const { t } = useTranslation(['training', 'common']);
   const { isFocusMode, settings, exitFocusMode } = useFocusMode();
   const { preferences } = useAccessibility();
+  const { isLayoutEmulationEnabled, getPhysicalKeyboardType } = useEmulation();
+
+  // Get emulation settings
+  const isEmulationEnabled = isLayoutEmulationEnabled(layoutId);
+  const physicalKeyboardType = getPhysicalKeyboardType();
+
+  // Create emulation configuration
+  const emulationConfig = createEmulationConfig(
+    physicalKeyboardType,
+    layoutId,
+    isEmulationEnabled
+  );
+
+
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
@@ -70,8 +90,19 @@ export const FocusMode: React.FC<FocusModeProps> = ({
     // Only process printable characters
     if (e.key.length === 1) {
       const expectedChar = text[currentIndex];
-      const typedChar = convertKey(e.key); // Convert QWERTY to target layout
+
+      // Apply keyboard emulation first
+      const emulatedKey = remapKey(e.key, emulationConfig);
+
+      // If emulation is enabled, use emulated key directly
+      // If emulation is disabled, convert QWERTY to target layout
+      const typedChar = emulationConfig.emulationEnabled
+        ? emulatedKey
+        : convertKey(e.key);
+
       const isCorrect = typedChar === expectedChar;
+
+
 
       // Start timing on first keystroke
       if (startTime === null) {
@@ -98,7 +129,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
             const announcement = document.createElement('div');
             announcement.setAttribute('aria-live', 'assertive');
             announcement.className = 'sr-only';
-            announcement.textContent = `Exercise completed! ${accuracy}% accuracy, ${wpm} words per minute. Press Escape to exit focus mode.`;
+            announcement.textContent = t('training:focus.exerciseCompleted', { accuracy, wpm });
             document.body.appendChild(announcement);
             
             setTimeout(() => {
@@ -150,8 +181,8 @@ export const FocusMode: React.FC<FocusModeProps> = ({
       <button
         className="focus-exit-button focus-smooth"
         onClick={exitFocusMode}
-        aria-label="Exit focus mode (or press Escape)"
-        title="Exit focus mode (or press Escape)"
+        aria-label={t('training:focus.exitFocusMode')}
+        title={t('training:focus.exitFocusMode')}
       >
         <X />
       </button>
@@ -162,7 +193,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
         className="sr-only"
         onKeyDown={handleKeyDown}
         autoFocus
-        aria-label="Focus mode typing input"
+        aria-label={t('training:focus.typingInput')}
       />
 
       {/* Main typing area */}
@@ -171,7 +202,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({
           className="focus-text"
           onClick={() => inputRef.current?.focus()}
           role="textbox"
-          aria-label="Focus mode text display"
+          aria-label={t('training:focus.textDisplay')}
           aria-describedby="focus-instructions"
         >
           {text.split('').map((char, index) => renderCharacter(char, index))}
@@ -200,12 +231,11 @@ export const FocusMode: React.FC<FocusModeProps> = ({
         </div>
       )}
 
+
+
       {/* Screen reader instructions */}
       <div id="focus-instructions" className="sr-only">
-        Focus mode is active. Type the text shown on screen. 
-        Press Escape to exit focus mode. 
-        Use Backspace to correct mistakes.
-        Current progress: {Math.round(progress)}% complete.
+        {t('training:focus.instructions', { progress: Math.round(progress) })}
       </div>
 
       {/* Live region for screen reader updates */}
@@ -216,8 +246,11 @@ export const FocusMode: React.FC<FocusModeProps> = ({
       >
         {currentIndex > 0 && (
           <span>
-            Character {currentIndex} of {text.length}. 
-            {errors[currentIndex - 1] ? 'Incorrect' : 'Correct'}.
+            {t('training:focus.characterProgress', {
+              current: currentIndex,
+              total: text.length,
+              result: errors[currentIndex - 1] ? t('training:focus.incorrect') : t('training:focus.correct')
+            })}
           </span>
         )}
       </div>

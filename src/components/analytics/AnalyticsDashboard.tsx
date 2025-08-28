@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface AnalyticsDashboardProps {
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ layoutId = "colemak", className }) => {
+  const { t } = useTranslation(['statistics', 'common']);
   const { user } = useAuth();
   const { statistics } = useUserStatistics(user?.id || '');
   const { sessions } = useTypingSessions(user?.id || '', { limit: 10 });
@@ -61,8 +63,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ layoutId
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
               <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
-              <p className="text-muted-foreground">Please sign in to view your typing analytics</p>
+              <h3 className="text-lg font-semibold mb-2">{t('statistics:analytics.analytics')}</h3>
+              <p className="text-muted-foreground">{t('common:auth.signInRequired')}</p>
             </div>
           </CardContent>
         </Card>
@@ -75,9 +77,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ layoutId
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold">{t('statistics:analytics.analytics')}</h1>
           <p className="text-muted-foreground">
-            Comprehensive analysis of your typing performance and progress
+            {t('statistics:analytics.comprehensiveAnalysis', 'Comprehensive analysis of your typing performance and progress')}
           </p>
         </div>
         
@@ -174,11 +176,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ layoutId
       {/* Main Analytics Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-          <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed</TabsTrigger>
+          <TabsTrigger value="overview">{t('statistics:titles.overview')}</TabsTrigger>
+          <TabsTrigger value="performance">{t('statistics:realtime.performance')}</TabsTrigger>
+          <TabsTrigger value="progress">{t('common:progress.progress')}</TabsTrigger>
+          <TabsTrigger value="mistakes">{t('statistics:analytics.mistakeAnalysis')}</TabsTrigger>
+          <TabsTrigger value="detailed">{t('statistics:titles.detailed')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">

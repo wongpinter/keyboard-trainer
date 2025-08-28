@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import UserStats from './UserStats';
 import LayoutBuilder from './LayoutBuilder';
 
 const Dashboard = () => {
+  const { t } = useTranslation(['statistics', 'common', 'training']);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -119,7 +121,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center">
           <Keyboard className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-muted-foreground">{t('common:ui.loading')}</p>
         </div>
       </div>
     );
@@ -148,16 +150,16 @@ const Dashboard = () => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Keyboard className="w-8 h-8 text-primary" />
-              <span className="text-xl font-bold">Keyboard Trainer</span>
+              <span className="text-xl font-bold">{t('training:titles.keyboardTrainer')}</span>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" onClick={() => navigate('/statistics')}>
               <BarChart3 className="w-4 h-4 mr-2" />
-              Analytics
+              {t('statistics:analytics.analytics')}
             </Button>
             <span className="text-sm text-muted-foreground">
-              Welcome, {profile?.display_name || profile?.username || user.email}
+              {t('statistics:dashboard.welcome')}, {profile?.display_name || profile?.username || user.email}
             </span>
             <FocusModeToggle />
             <EmulationToggle variant="compact" layoutId="colemak" />
@@ -179,17 +181,17 @@ const Dashboard = () => {
       >
         <div className="space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <h1 className="text-3xl font-bold">{t('statistics:titles.dashboard')}</h1>
             <p className="text-muted-foreground">
-              Track your progress and manage your typing curriculum
+              {t('statistics:dashboard.trackProgress', 'Track your progress and manage your typing curriculum')}
             </p>
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="curriculums">Curriculums</TabsTrigger>
-              <TabsTrigger value="layouts">Layout Builder</TabsTrigger>
+              <TabsTrigger value="overview">{t('statistics:titles.overview')}</TabsTrigger>
+              <TabsTrigger value="curriculums">{t('common:curriculum.curriculums')}</TabsTrigger>
+              <TabsTrigger value="layouts">{t('common:layout.layoutBuilder')}</TabsTrigger>
               {/* Statistics moved to dedicated page - removed redundancy */}
             </TabsList>
 
@@ -198,7 +200,7 @@ const Dashboard = () => {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Today's Progress</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('statistics:dashboard.todaysProgress')}</CardTitle>
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -206,14 +208,14 @@ const Dashboard = () => {
                       {statistics?.totalSessions || 0}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Sessions completed today
+                      {t('statistics:dashboard.sessionsToday', 'Sessions completed today')}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Current WPM</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('statistics:realtime.currentWpm')}</CardTitle>
                     <Zap className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -221,14 +223,14 @@ const Dashboard = () => {
                       {Math.round(statistics?.averageWpm || 0)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Average typing speed
+                      {t('statistics:realtime.averageWpm')}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Accuracy</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('statistics:metrics.accuracy')}</CardTitle>
                     <Target className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -236,20 +238,20 @@ const Dashboard = () => {
                       {Math.round(statistics?.averageAccuracy || 0)}%
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Current accuracy rate
+                      {t('statistics:realtime.currentAccuracy')}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Streak</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('statistics:dashboard.currentStreak')}</CardTitle>
                     <Award className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{statistics?.streakDays || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      Days practicing
+                      {t('statistics:dashboard.daysPracticing', 'Days practicing')}
                     </p>
                   </CardContent>
                 </Card>
@@ -337,23 +339,23 @@ const Dashboard = () => {
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
+                    <CardTitle>{t('statistics:dashboard.quickActions', 'Quick Actions')}</CardTitle>
                     <CardDescription>
-                      Jump into practice or view detailed analytics
+                      {t('statistics:dashboard.quickActionsDesc', 'Jump into practice or view detailed analytics')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <Button className="w-full justify-start" onClick={() => navigate('/trainer')}>
                       <Keyboard className="w-4 h-4 mr-2" />
-                      Continue Practice
+                      {t('training:practice.continuePractice')}
                     </Button>
                     <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/statistics')}>
                       <BarChart3 className="w-4 h-4 mr-2" />
-                      View Analytics
+                      {t('statistics:analytics.analytics')}
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create New Layout
+                      {t('common:layout.createLayout')}
                     </Button>
                   </CardContent>
                 </Card>

@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ interface ErrorFallbackProps {
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError, goHome }) => {
+  const { t } = useTranslation(['errors', 'common']);
   const isDevelopment = import.meta.env.DEV;
 
   return (
@@ -32,10 +34,10 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError, goHome
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl font-bold text-destructive">
-            Oops! Something went wrong
+            {t('errors:general.somethingWentWrong')}
           </CardTitle>
           <CardDescription className="text-base">
-            We encountered an unexpected error. Don't worry, this has been logged and we'll look into it.
+            {t('errors:general.unexpectedError')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -43,7 +45,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError, goHome
           {isDevelopment && error && (
             <div className="bg-muted/50 p-4 rounded-lg border">
               <h4 className="font-semibold text-sm mb-2 text-destructive">
-                Development Error Details:
+                {t('errors:general.developmentDetails')}
               </h4>
               <div className="text-xs font-mono bg-background p-3 rounded border overflow-auto max-h-40">
                 <div className="text-destructive font-semibold mb-1">
@@ -61,17 +63,17 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError, goHome
           {/* User-friendly message */}
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">
-              This error has been automatically reported. You can try refreshing the page or return to the home page.
+              {t('errors:general.errorReported')}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={resetError} variant="outline" className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
-                Try Again
+                {t('common:buttons.tryAgain')}
               </Button>
               <Button onClick={goHome} className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
-                Go Home
+                {t('common:buttons.goHome')}
               </Button>
             </div>
           </div>
@@ -79,14 +81,14 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError, goHome
           {/* Additional Help */}
           <div className="text-center text-sm text-muted-foreground">
             <p>
-              If this problem persists, please{' '}
-              <a 
-                href="mailto:support@keyboardtrainer.com" 
+              {t('errors:general.persistentProblem')}{' '}
+              <a
+                href="mailto:support@keyboardtrainer.com"
                 className="text-primary hover:underline"
               >
-                contact support
+                {t('errors:general.contactSupport')}
               </a>
-              {' '}with details about what you were doing when this error occurred.
+              {' '}{t('errors:general.withDetails')}
             </p>
           </div>
         </CardContent>
