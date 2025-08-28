@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { TypingStats } from '@/types/keyboard';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ const ProgressTracker = ({
   targetAccuracy = stats.accuracy > 0 ? Math.max(95, stats.accuracy + 2) : 95,
   lessonProgress = 0
 }: ProgressTrackerProps) => {
+  const { t } = useTranslation(['training', 'common']);
   const wpmProgress = Math.min((stats.wpm / targetWpm) * 100, 100);
   const accuracyProgress = Math.min((stats.accuracy / targetAccuracy) * 100, 100);
 
@@ -40,7 +42,7 @@ const ProgressTracker = ({
           <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>
         </div>
         <div className="text-xs text-muted-foreground">
-          Target: {target}{unit}
+          {t('training:progress.target', { target, unit })}
         </div>
       </div>
       <Progress 
@@ -57,14 +59,14 @@ const ProgressTracker = ({
       {/* Current Session Stats */}
       <div className="grid grid-cols-2 gap-4">
         <StatCard
-          title="Speed"
+          title={t('training:progress.speed')}
           value={stats.wpm}
-          unit="WPM"
+          unit={t('common:units.wpm')}
           progress={wpmProgress}
           target={targetWpm}
         />
         <StatCard
-          title="Accuracy"
+          title={t('training:progress.accuracy')}
           value={stats.accuracy}
           unit="%"
           progress={accuracyProgress}
@@ -76,7 +78,7 @@ const ProgressTracker = ({
       <Card className="p-4">
         <div className="mb-2">
           <div className="flex justify-between items-center">
-            <h4 className="text-sm font-medium text-muted-foreground">Lesson Progress</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">{t('training:progress.lessonProgress')}</h4>
             <span className="text-sm text-muted-foreground">{lessonProgress}%</span>
           </div>
         </div>
@@ -88,26 +90,26 @@ const ProgressTracker = ({
 
       {/* Detailed Stats */}
       <Card className="p-4">
-        <h4 className="text-sm font-medium text-muted-foreground mb-3">Session Details</h4>
+        <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('training:progress.sessionDetails')}</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-muted-foreground">Characters:</span>
+            <span className="text-muted-foreground">{t('training:progress.characters')}</span>
             <span className="ml-2 font-medium">{stats.totalCharacters}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Errors:</span>
+            <span className="text-muted-foreground">{t('training:progress.errors')}</span>
             <span className="ml-2 font-medium text-destructive">{stats.incorrectCharacters}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Correct:</span>
+            <span className="text-muted-foreground">{t('training:progress.correct')}</span>
             <span className="ml-2 font-medium text-success">{stats.correctCharacters}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Time:</span>
+            <span className="text-muted-foreground">{t('training:progress.time')}</span>
             <span className="ml-2 font-medium">
-              {stats.startTime ? 
-                `${Math.floor(((stats.endTime || Date.now()) - stats.startTime) / 1000)}s` : 
-                '0s'
+              {stats.startTime ?
+                t('training:progress.timeFormat', { seconds: Math.floor(((stats.endTime || Date.now()) - stats.startTime) / 1000) }) :
+                t('training:progress.timeFormat', { seconds: 0 })
               }
             </span>
           </div>

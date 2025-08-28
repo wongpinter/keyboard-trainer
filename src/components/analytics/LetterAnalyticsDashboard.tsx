@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ export const LetterAnalyticsDashboard: React.FC<LetterAnalyticsDashboardProps> =
   sessions,
   className
 }) => {
+  const { t } = useTranslation(['statistics', 'common']);
   const [letterAnalytics, setLetterAnalytics] = useState<LetterAnalytics[]>([]);
   const [fingerAnalytics, setFingerAnalytics] = useState<FingerAnalytics[]>([]);
   const [letterHeatmap, setLetterHeatmap] = useState<LetterHeatmap[]>([]);
@@ -158,10 +160,10 @@ export const LetterAnalyticsDashboard: React.FC<LetterAnalyticsDashboardProps> =
       <AnimatedContainer animation="slide-up" delay={400}>
         <Tabs defaultValue="letters" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="letters">Letters</TabsTrigger>
-            <TabsTrigger value="fingers">Fingers</TabsTrigger>
-            <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
-            <TabsTrigger value="patterns">Error Patterns</TabsTrigger>
+            <TabsTrigger value="letters">{t('statistics:analytics.letters')}</TabsTrigger>
+            <TabsTrigger value="fingers">{t('statistics:analytics.fingers')}</TabsTrigger>
+            <TabsTrigger value="heatmap">{t('statistics:analytics.heatmap')}</TabsTrigger>
+            <TabsTrigger value="patterns">{t('statistics:analytics.errorPatterns')}</TabsTrigger>
           </TabsList>
 
           {/* Letter Analytics Tab */}
@@ -332,7 +334,7 @@ export const LetterAnalyticsDashboard: React.FC<LetterAnalyticsDashboardProps> =
 
                     {finger.weakestKeys.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium mb-2">Needs Practice</p>
+                        <p className="text-sm font-medium mb-2">{t('statistics:analytics.weakestKeys')}</p>
                         <div className="flex flex-wrap gap-1">
                           {finger.weakestKeys.map(key => (
                             <Badge key={key} variant="outline" className="text-xs">
@@ -345,7 +347,7 @@ export const LetterAnalyticsDashboard: React.FC<LetterAnalyticsDashboardProps> =
 
                     {finger.strongestKeys.length > 0 && (
                       <div>
-                        <p className="text-sm font-medium mb-2">Strong Keys</p>
+                        <p className="text-sm font-medium mb-2">{t('statistics:analytics.strongestKeys')}</p>
                         <div className="flex flex-wrap gap-1">
                           {finger.strongestKeys.map(key => (
                             <Badge key={key} variant="secondary" className="text-xs bg-green-100 text-green-800">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,15 +25,16 @@ import {
 } from 'lucide-react';
 
 export default function Statistics() {
+  const { t } = useTranslation(['statistics', 'common']);
   const { user } = useAuth();
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
-          <h1 className="text-4xl font-bold">Statistics & Analytics</h1>
+          <h1 className="text-4xl font-bold">{t('statistics:titles.statisticsAndAnalytics')}</h1>
           <p className="text-muted-foreground text-lg">
-            Comprehensive analysis of your typing performance and progress
+            {t('statistics:analytics.comprehensiveAnalysis')}
           </p>
         </div>
 
@@ -41,12 +43,12 @@ export default function Statistics() {
             <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
                 <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h2 className="text-2xl font-bold mb-2">Statistics Dashboard</h2>
+                <h2 className="text-2xl font-bold mb-2">{t('statistics:titles.dashboard')}</h2>
                 <p className="text-muted-foreground mb-6">
-                  Please sign in to view your typing statistics and analytics
+                  {t('statistics:auth.signInToViewStats')}
                 </p>
                 <Button>
-                  Sign In
+                  {t('common:buttons.signin')}
                 </Button>
               </div>
             </CardContent>
@@ -58,18 +60,18 @@ export default function Statistics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Statistics Dashboard</CardTitle>
+                <CardTitle>{t('statistics:titles.dashboard')}</CardTitle>
                 <CardDescription>
-                  Your typing statistics and analytics
+                  {t('statistics:dashboard.yourTypingStats')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p>Loading statistics dashboard...</p>
+                <p>{t('statistics:dashboard.loadingDashboard')}</p>
               </CardContent>
             </Card>
 
             <div className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Statistics Dashboard</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('statistics:titles.dashboard')}</h3>
               <StatisticsDashboard />
             </div>
           </div>

@@ -1,0 +1,40 @@
+{
+  "migration": {
+    "checkingPermissions": "Checking access permissions...",
+    "accessDenied": "Access Denied",
+    "restrictedToDev": "Migration functionality is restricted to development environments",
+    "databaseMigration": "Database Migration",
+    "developerTool": "Developer tool for migrating training data to Supabase database",
+    "guidelines": "Migration Guidelines",
+    "unauthorizedAccess": "Unauthorized Access Attempt",
+    "unauthorizedDescription": "Database migration functionality is only available to developers in development environments. You will be redirected to the dashboard shortly.",
+    "forDevelopers": "For Developers:",
+    "ensureDevMode": "Ensure you're running in development mode",
+    "setEnvVariable": "Set VITE_ENABLE_MIGRATION=true in your .env file",
+    "accessViaLocalhost": "Access via localhost during development",
+    "devEnvironmentDetected": "Developer Environment Detected",
+    "devEnvironmentDescription": "This migration tool is only available in development environments. It will not be accessible in production builds.",
+    "beforeRunning": "Before Running Migration:",
+    "ensureSupabase": "Ensure Supabase is properly configured",
+    "verifyConnection": "Verify database connection is working",
+    "runDryRun": "Run a dry run first to preview changes",
+    "backupData": "Backup existing data if necessary",
+    "afterMigration": "After Migration:",
+    "verifyCurriculums": "Verify all curriculums were created correctly",
+    "testLessonLoading": "Test lesson loading and content generation",
+    "updateApplication": "Update application to use database instead of static data",
+    "secureEndpoints": "Remove or secure migration endpoints for production"
+  },
+  "general": {
+    "adminPanel": "Admin Panel",
+    "dashboard": "Admin Dashboard",
+    "users": "Users",
+    "settings": "Settings",
+    "logs": "Logs",
+    "maintenance": "Maintenance",
+    "backup": "Backup",
+    "restore": "Restore",
+    "export": "Export",
+    "import": "Import"
+  }
+}

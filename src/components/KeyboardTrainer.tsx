@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { COLEMAK_LAYOUT } from '@/types/keyboard';
 import { useKeyboardTraining } from '@/hooks/useKeyboardTraining';
 import { useAuth } from '@/hooks/useDatabase';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RotateCcw, SkipForward, BookOpen, List, User, LogIn } from 'lucide-react';
+import { RotateCcw, SkipForward, List, User, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -20,6 +21,7 @@ import { useEmulation } from '@/contexts/EmulationContext';
 import { EmulationToggle } from '@/components/ui/emulation-toggle';
 
 const KeyboardTrainer = () => {
+  const { t } = useTranslation(['training', 'common']);
   const [showFingerGuide, setShowFingerGuide] = useState(true);
   const [showLessonSelector, setShowLessonSelector] = useState(false);
   const { toast } = useToast();
@@ -59,7 +61,7 @@ const KeyboardTrainer = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading training system...</p>
+              <p className="text-muted-foreground">{t('training:interface.loadingTrainingSystem')}</p>
             </div>
           </div>
         </div>
@@ -75,17 +77,17 @@ const KeyboardTrainer = () => {
           <div className="flex items-center justify-center py-20">
             <Card className="p-8 text-center max-w-md">
               <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-bold mb-4">Sign In to Start Training</h2>
+              <h2 className="text-2xl font-bold mb-4">{t('training:interface.signInToStartTraining')}</h2>
               <p className="text-muted-foreground mb-6">
-                Sign in to track your progress, save your sessions, and access personalized training.
+                {t('training:interface.signInToTrackProgress')}
               </p>
               <Button onClick={() => navigate('/auth')} className="w-full">
                 <LogIn className="w-4 h-4 mr-2" />
-                Sign In
+                {t('common:buttons.signin')}
               </Button>
               <Alert className="mt-4">
                 <AlertDescription>
-                  Your progress and statistics will be saved to your account.
+                  {t('training:interface.progressWillBeSaved')}
                 </AlertDescription>
               </Alert>
             </Card>
@@ -98,13 +100,16 @@ const KeyboardTrainer = () => {
   const handleLessonComplete = () => {
     completeLesson();
     toast({
-      title: "Lesson Complete!",
-      description: `Great job! WPM: ${session.stats.wpm}, Accuracy: ${session.stats.accuracy}%`,
+      title: t('training:interface.lessonComplete'),
+      description: t('training:interface.greatJobStats', {
+        wpm: session.stats.wpm,
+        accuracy: session.stats.accuracy
+      }),
     });
   };
 
   const currentKeys = session.activeKeys.join('').toUpperCase();
-  const lessonName = session.selectedLesson ? session.selectedLesson.name : `Stage ${session.currentLesson + 1}`;
+  const lessonName = session.selectedLesson ? session.selectedLesson.name : t('training:interface.stage', { number: session.currentLesson + 1 });
   const lessonDescription = session.selectedLesson ? session.selectedLesson.description : 'Progressive keyboard training';
 
   return (
@@ -133,7 +138,7 @@ const KeyboardTrainer = () => {
               <h2 className="text-xl font-semibold">{lessonName}</h2>
               <p className="text-muted-foreground mb-2">{lessonDescription}</p>
               <p className="text-muted-foreground">
-                Learning keys: <Badge variant="secondary">{currentKeys}</Badge>
+                {t('training:interface.learningKeys')} <Badge variant="secondary">{currentKeys}</Badge>
               </p>
             </div>
             <div className="flex gap-2">
@@ -144,14 +149,14 @@ const KeyboardTrainer = () => {
                 disabled={session.stats.totalCharacters === 0}
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Restart
+                {t('training:interface.restart')}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFingerGuide(!showFingerGuide)}
               >
-                {showFingerGuide ? 'Hide' : 'Show'} Finger Guide
+                {showFingerGuide ? t('training:interface.hideFingerGuide') : t('training:interface.showFingerGuide')}
               </Button>
               <Button
                 variant="outline"
@@ -159,7 +164,7 @@ const KeyboardTrainer = () => {
                 onClick={() => setShowLessonSelector(!showLessonSelector)}
               >
                 <List className="w-4 h-4 mr-2" />
-                {showLessonSelector ? 'Hide' : 'Show'} Lessons
+                {showLessonSelector ? t('common:buttons.hide') : t('common:buttons.show')} {t('training:titles.lessons')}
               </Button>
               {session.currentLesson < availableLessons - 1 && (
                 <Button
@@ -168,7 +173,7 @@ const KeyboardTrainer = () => {
                   onClick={() => startLesson(session.currentLesson + 1)}
                 >
                   <SkipForward className="w-4 h-4 mr-2" />
-                  Next Lesson
+                  {t('training:lessons.nextLesson')}
                 </Button>
               )}
             </div>
@@ -263,7 +268,7 @@ const KeyboardTrainer = () => {
                   className="text-xs"
                 >
                   <div className="text-center">
-                    <div>Stage {index + 1}</div>
+                    <div>{t('training:interface.stage', { number: index + 1 })}</div>
                     <div className="text-xs opacity-75">
                       {keys.join('').toUpperCase()}
                     </div>

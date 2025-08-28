@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyboardLayout, TypingStats } from '@/types/keyboard';
 import { cn } from '@/lib/utils';
 import { useAccessibility, announceToScreenReader } from '@/hooks/useAccessibility';
@@ -28,6 +29,7 @@ const TypingArea = ({
   onComplete,
   layoutId = 'colemak'
 }: TypingAreaProps) => {
+  const { t } = useTranslation(['training', 'common']);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [errors, setErrors] = useState<boolean[]>([]);
@@ -105,7 +107,12 @@ const TypingArea = ({
 
       // Apply keyboard emulation first
       const emulatedKey = remapKey(e.key, emulationConfig);
-      const typedChar = convertKey(emulatedKey);
+
+      // If emulation is enabled, use emulated key directly
+      // If emulation is disabled, convert QWERTY to target layout
+      const typedChar = emulationConfig.emulationEnabled
+        ? emulatedKey
+        : convertKey(e.key);
 
       // Only process printable characters
       if (e.key.length === 1) {
@@ -166,7 +173,10 @@ const TypingArea = ({
           if (preferences.screenReader) {
             const finalStats = calculateStats(typedText + typedChar, errors.concat(!isCorrect));
             announceToScreenReader(
-              `Typing exercise completed! ${finalStats.wpm} words per minute, ${finalStats.accuracy}% accuracy`,
+              t('training:interface.typingExerciseCompleted', {
+                wpm: finalStats.wpm,
+                accuracy: finalStats.accuracy
+              }),
               'assertive'
             );
           }
@@ -297,6 +307,7 @@ const TypingArea = ({
         <FocusMode
           text={text}
           layout={layout}
+          layoutId={layoutId}
           onComplete={onComplete}
           onKeyPress={onKeyPress}
         />
@@ -313,7 +324,7 @@ const TypingArea = ({
         )}
         onClick={() => inputRef.current?.focus()}
         role="textbox"
-        aria-label="Typing practice area"
+        aria-label={t('training:interface.typingPracticeArea')}
         aria-describedby="typing-instructions typing-progress"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -334,15 +345,13 @@ const TypingArea = ({
         className="sr-only"
         autoFocus
         onBlur={handleInputBlur}
-        aria-label="Typing input (hidden)"
+        aria-label={t('training:interface.typingInputHidden')}
         aria-describedby="typing-instructions"
       />
 
       {/* Screen reader instructions */}
       <div id="typing-instructions" className="sr-only">
-        Type the text shown above. Correct characters are highlighted in green,
-        incorrect characters in red. Your current position is marked with a cursor.
-        Press any key to start typing.
+        {t('training:interface.typingInstructions')}
       </div>
 
       <div
@@ -352,13 +361,13 @@ const TypingArea = ({
         aria-atomic="true"
       >
         <div>
-          {currentIndex}/{text.length} characters
+          {t('training:interface.charactersProgress', { current: currentIndex, total: text.length })}
           <span className="sr-only">
-            , {Math.round((currentIndex / text.length) * 100)}% complete
+            , {t('training:interface.percentComplete', { percent: Math.round((currentIndex / text.length) * 100) })}
           </span>
         </div>
         <div>
-          Press ESC to reset
+          {t('training:interface.pressEscToReset')}
         </div>
       </div>
     </div>

@@ -1,4 +1,17 @@
 {
+  "general": {
+    "unknown": "Terjadi error yang tidak diketahui",
+    "networkError": "Terjadi error jaringan",
+    "serverError": "Terjadi error server",
+    "validationError": "Terjadi error validasi",
+    "somethingWentWrong": "Ups! Ada yang salah",
+    "unexpectedError": "Kami mengalami error yang tidak terduga. Jangan khawatir, ini telah dicatat dan akan kami periksa.",
+    "developmentDetails": "Detail Error Development:",
+    "errorReported": "Error ini telah dilaporkan secara otomatis. Anda dapat mencoba menyegarkan halaman atau kembali ke halaman utama.",
+    "persistentProblem": "Jika masalah ini terus berlanjut, silakan",
+    "contactSupport": "hubungi dukungan",
+    "withDetails": "dengan detail tentang apa yang Anda lakukan ketika error ini terjadi."
+  },
   "auth": {
     "authError": "Autentikasi gagal. Silakan periksa kredensial Anda.",
     "authorizationError": "Anda tidak memiliki izin untuk melakukan tindakan ini.",
@@ -140,5 +153,11 @@
     "configurationError": "Error konfigurasi terdeteksi.",
     "initializationError": "Inisialisasi gagal.",
     "shutdownError": "Error shutdown terjadi."
+  },
+  "notFound": {
+    "pageNotFound": "Ups! Halaman tidak ditemukan",
+    "returnToHome": "Kembali ke Beranda",
+    "pageDoesNotExist": "Halaman yang Anda cari tidak ada",
+    "checkUrl": "Silakan periksa URL dan coba lagi"
   }
 }

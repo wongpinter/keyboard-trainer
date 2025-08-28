@@ -26,6 +26,8 @@ interface EmulationContextType {
   isLayoutEmulationEnabled: (layoutId: string) => boolean;
   getPhysicalKeyboardType: () => 'qwerty' | 'colemak' | 'dvorak' | 'custom';
   setPhysicalKeyboardType: (type: 'qwerty' | 'colemak' | 'dvorak' | 'custom') => void;
+  resetEmulationSettings: () => void;
+  getDebugInfo: () => any;
 }
 
 const EmulationContext = createContext<EmulationContextType | undefined>(undefined);
@@ -79,9 +81,12 @@ export const EmulationProvider: React.FC<EmulationProviderProps> = ({ children }
 
   const toggleEmulation = (layoutId?: string) => {
     if (layoutId) {
+      const currentState = isLayoutEmulationEnabled(layoutId);
+      const newState = !currentState;
+
       setLayoutEmulationSettings(prev => ({
         ...prev,
-        [layoutId]: !isLayoutEmulationEnabled(layoutId)
+        [layoutId]: newState
       }));
     } else {
       setIsEmulationEnabled(prev => !prev);
@@ -105,6 +110,24 @@ export const EmulationProvider: React.FC<EmulationProviderProps> = ({ children }
     setPhysicalKeyboardTypeState(type);
   };
 
+  const resetEmulationSettings = () => {
+    setPhysicalKeyboardTypeState('qwerty');
+    setLayoutEmulationSettings({});
+    setIsEmulationEnabled(true);
+    localStorage.removeItem('physical-keyboard-type');
+    localStorage.removeItem('layout-emulation-settings');
+    localStorage.removeItem('keyboard-emulation-enabled');
+  };
+
+  const getDebugInfo = () => {
+    return {
+      physicalKeyboardType,
+      layoutEmulationSettings,
+      isEmulationEnabled,
+      colemakEmulationEnabled: isLayoutEmulationEnabled('colemak')
+    };
+  };
+
   return (
     <EmulationContext.Provider value={{
       isEmulationEnabled,
@@ -112,7 +135,9 @@ export const EmulationProvider: React.FC<EmulationProviderProps> = ({ children }
       setEmulationEnabled,
       isLayoutEmulationEnabled,
       getPhysicalKeyboardType,
-      setPhysicalKeyboardType
+      setPhysicalKeyboardType,
+      resetEmulationSettings,
+      getDebugInfo
     }}>
       {children}
     </EmulationContext.Provider>

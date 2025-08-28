@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export const AdaptiveTrainingComponent: React.FC<AdaptiveTrainingComponentProps>
   onExerciseComplete,
   className
 }) => {
+  const { t } = useTranslation(['training', 'common']);
   const [adaptiveTraining, setAdaptiveTraining] = useState<AdaptiveTraining | null>(null);
   const [currentExercise, setCurrentExercise] = useState<CustomExercise | null>(null);
   const [exerciseIndex, setExerciseIndex] = useState(0);
@@ -168,11 +170,11 @@ export const AdaptiveTrainingComponent: React.FC<AdaptiveTrainingComponentProps>
                 </CardTitle>
                 <CardDescription>{currentExercise.description}</CardDescription>
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsTraining(false)}
               >
-                Exit Exercise
+                {t('training:adaptive.exitExercise')}
               </Button>
             </div>
           </CardHeader>
@@ -181,15 +183,15 @@ export const AdaptiveTrainingComponent: React.FC<AdaptiveTrainingComponentProps>
               <div className="flex gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Est. {currentExercise.estimatedTime} min</span>
+                  <span>{t('common:time.estimated')} {currentExercise.estimatedTime} {t('common:time.minutes')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  <span>Target: {currentExercise.successCriteria.minAccuracy}% accuracy</span>
+                  <span>{t('training:adaptive.targetAccuracy', { accuracy: currentExercise.successCriteria.minAccuracy })}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4" />
-                  <span>Min: {currentExercise.successCriteria.minWpm} WPM</span>
+                  <span>{t('training:adaptive.minWpm', { wpm: currentExercise.successCriteria.minWpm })}</span>
                 </div>
               </div>
 
@@ -218,36 +220,36 @@ export const AdaptiveTrainingComponent: React.FC<AdaptiveTrainingComponentProps>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              Adaptive Training Plan
+              {t('training:adaptive.adaptiveTraining')}
             </CardTitle>
             <CardDescription>
-              Personalized exercises based on your typing patterns
+              {t('training:adaptive.personalizedExercises')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">{adaptiveTraining.focusLetters.length}</div>
-                <p className="text-sm text-muted-foreground">Focus Letters</p>
+                <p className="text-sm text-muted-foreground">{t('training:adaptive.focusLetters')}</p>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">{totalExercises}</div>
-                <p className="text-sm text-muted-foreground">Exercises</p>
+                <p className="text-sm text-muted-foreground">{t('training:exercises.exercises')}</p>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">{adaptiveTraining.estimatedPracticeTime}</div>
-                <p className="text-sm text-muted-foreground">Minutes</p>
+                <p className="text-sm text-muted-foreground">{t('common:time.minutes')}</p>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">{Math.round(progressPercentage)}%</div>
-                <p className="text-sm text-muted-foreground">Complete</p>
+                <p className="text-sm text-muted-foreground">{t('training:adaptive.progressPercentage', { percent: Math.round(progressPercentage) })}</p>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Progress</span>
-                <span>{completedCount} / {totalExercises}</span>
+                <span>{t('common:progress.progress')}</span>
+                <span>{t('training:adaptive.completedExercises', { completed: completedCount, total: totalExercises })}</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 

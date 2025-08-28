@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,7 @@ interface Curriculum {
 }
 
 const CurriculumList = () => {
+  const { t } = useTranslation(['common', 'training']);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -55,39 +57,42 @@ const CurriculumList = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
 
-      // Check if progress already exists
-      const { data: existingProgress } = await supabase
+      // Use upsert to avoid duplicate key errors
+      // The database has a unique constraint on (user_id, curriculum_id)
+      // so we use upsert with ignoreDuplicates to handle race conditions
+      const { error } = await supabase
         .from('user_progress')
-        .select('id')
-        .eq('user_id', user.user.id)
-        .eq('curriculum_id', curriculumId)
-        .single();
+        .upsert({
+          user_id: user.user.id,
+          curriculum_id: curriculumId,
+          lesson_index: 0,
+          completed_lessons: [],
+          current_lesson_attempts: 0,
+          best_wpm: 0,
+          best_accuracy: 0,
+          total_practice_time: 0,
+          mastery_level: 0
+        }, {
+          onConflict: 'user_id,curriculum_id',
+          ignoreDuplicates: true
+        });
 
-      if (!existingProgress) {
-        // Create initial progress record
-        const { error } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.user.id,
-            curriculum_id: curriculumId,
-            lesson_index: 0,
-            completed_lessons: [],
-            current_lesson_attempts: 0,
-            best_wpm: 0,
-            best_accuracy: 0,
-            total_practice_time: 0,
-            mastery_level: 0
-          });
-
-        if (error) throw error;
+      if (error) {
+        // If it's a duplicate key error, it's not actually an error - the progress already exists
+        if (error.code === '23505' || error.message?.includes('duplicate key')) {
+          console.log('Progress already exists for this curriculum, continuing...');
+        } else {
+          throw error;
+        }
       }
 
       // Navigate to trainer with curriculum
       navigate(`/trainer?curriculum=${curriculumId}`);
     } catch (error: any) {
+      console.error('Error starting curriculum:', error);
       toast({
         title: "Error starting curriculum",
-        description: error.message,
+        description: error.message || "Failed to start curriculum. Please try again.",
         variant: "destructive",
       });
     }
@@ -106,12 +111,12 @@ const CurriculumList = () => {
 
   const getDifficultyLabel = (level: number) => {
     switch (level) {
-      case 1: return 'Beginner';
-      case 2: return 'Easy';
-      case 3: return 'Medium';
-      case 4: return 'Hard';
-      case 5: return 'Expert';
-      default: return 'Unknown';
+      case 1: return t('common:difficulty.beginner');
+      case 2: return t('common:difficulty.easy');
+      case 3: return t('common:difficulty.medium');
+      case 4: return t('common:difficulty.hard');
+      case 5: return t('common:difficulty.expert');
+      default: return t('common:difficulty.unknown');
     }
   };
 
@@ -137,9 +142,9 @@ const CurriculumList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Available Curriculums</h2>
+          <h2 className="text-2xl font-bold">{t('common:curriculum.availableCurriculums')}</h2>
           <p className="text-muted-foreground">
-            Choose a curriculum to start learning or continue your progress
+            {t('common:curriculum.chooseCurriculum')}
           </p>
         </div>
       </div>
@@ -182,12 +187,15 @@ const CurriculumList = () => {
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Progress</span>
+                    <span>{t('common:progress.progress')}</span>
                     <span>{Math.round(progressPercentage)}%</span>
                   </div>
                   <Progress value={progressPercentage} className="h-2" />
                   <div className="text-xs text-muted-foreground">
-                    {curriculum.progress?.completed_lessons.length || 0} of {curriculum.lessons.length} lessons completed
+                    {t('common:curriculum.lessonsCompleted', {
+                      completed: curriculum.progress?.completed_lessons.length || 0,
+                      total: curriculum.lessons.length
+                    })}
                   </div>
                 </div>
 
@@ -209,7 +217,7 @@ const CurriculumList = () => {
                   onClick={() => startCurriculum(curriculum.id)}
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  {curriculum.progress ? 'Continue' : 'Start'} Learning
+                  {curriculum.progress ? t('common:buttons.continue') : t('common:buttons.start')} {t('training:practice.learning')}
                 </Button>
               </CardContent>
             </Card>
