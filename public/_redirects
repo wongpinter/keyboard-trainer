@@ -1,0 +1,9 @@
+# Redirect all routes to index.html for SPA routing
+/*    /index.html   200
+
+# API redirects (if needed for Supabase)
+/api/*  https://your-supabase-url.supabase.co/:splat  200
+
+# Prevent access to sensitive files
+/.env*  /404.html  404
+/src/*  /404.html  404
